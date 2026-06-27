@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SonicForge AI — 产品演示</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Noto+Sans+SC:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#08080c;--bg2:#0e0e14;--bg3:#16161f;--text:#e8e6f0;--text2:#9896a8;--text3:#5c5a6e;--cyan:#00f0ff;--magenta:#ff2d8a;--amber:#ffb300;--lime:#a8ff00;--radius:16px;--radius-sm:10px;--font-display:'Outfit','Noto Sans SC',sans-serif;--font-body:'Noto Sans SC','Outfit',sans-serif;--font-mono:'JetBrains Mono',monospace}
+html{scroll-behavior:smooth;font-size:16px}
+body{background:var(--bg);color:var(--text);font-family:var(--font-body);overflow-x:hidden;line-height:1.6}
+::selection{background:var(--cyan);color:var(--bg)}
+a{color:inherit;text-decoration:none}
+
+.nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:16px 48px;display:flex;align-items:center;justify-content:space-between;backdrop-filter:blur(20px);background:rgba(8,8,12,.85);border-bottom:1px solid rgba(255,255,255,.04)}
+.nav-logo{font-family:var(--font-display);font-weight:800;font-size:1.3rem;display:flex;align-items:center;gap:10px;cursor:pointer}
+.nav-logo .dot{width:8px;height:8px;border-radius:50%;background:var(--cyan);box-shadow:0 0 10px var(--cyan)}
+.nav-back{padding:8px 20px;border-radius:100px;border:1px solid rgba(255,255,255,.12);background:transparent;color:var(--text2);font-size:.85rem;cursor:pointer;transition:all .2s;font-family:var(--font-body)}
+.nav-back:hover{border-color:var(--text);color:var(--text)}
+
+.demo{padding:100px 48px 60px;max-width:1000px;margin:0 auto}
+.demo-header{text-align:center;margin-bottom:64px}
+.demo-header h1{font-family:var(--font-display);font-size:2.5rem;font-weight:800;letter-spacing:-.02em;margin-bottom:12px}
+.demo-header p{color:var(--text2);font-size:1.05rem;max-width:500px;margin:0 auto}
+
+/* Steps */
+.steps{display:flex;flex-direction:column;gap:32px}
+.step{display:grid;grid-template-columns:80px 1fr;gap:24px;align-items:start}
+.step-num{width:64px;height:64px;border-radius:50%;background:var(--bg2);border:2px solid var(--bg3);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:1.5rem;font-weight:800;color:var(--cyan);transition:all .3s}
+.step.active .step-num{border-color:var(--cyan);background:rgba(0,240,255,.08);box-shadow:0 0 20px rgba(0,240,255,.2)}
+.step-content{background:var(--bg2);border:1px solid rgba(255,255,255,.05);border-radius:var(--radius);padding:32px;transition:all .3s}
+.step.active .step-content{border-color:rgba(0,240,255,.2)}
+.step-content h3{font-family:var(--font-display);font-size:1.2rem;font-weight:700;margin-bottom:8px}
+.step-content p{color:var(--text2);font-size:.9rem;line-height:1.7;margin-bottom:16px}
+
+/* Demo visual */
+.demo-visual{height:160px;border-radius:8px;background:var(--bg);border:1px solid rgba(255,255,255,.03);display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative}
+.demo-visual canvas{width:100%;height:100%}
+
+/* Progress bar */
+.demo-progress{margin-top:48px;padding:24px;background:var(--bg2);border-radius:var(--radius);border:1px solid rgba(255,255,255,.05)}
+.progress-track{height:6px;background:var(--bg3);border-radius:3px;position:relative;margin-bottom:12px}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--cyan),var(--magenta));border-radius:3px;width:0%;transition:width .5s ease}
+.progress-labels{display:flex;justify-content:space-between;font-size:.75rem;color:var(--text3);font-family:var(--font-mono)}
+
+/* CTA */
+.demo-cta{text-align:center;margin-top:64px}
+.demo-cta .btn-primary{padding:16px 48px;border-radius:100px;background:linear-gradient(135deg,var(--cyan),#00b4d8);color:var(--bg);font-weight:700;font-size:1rem;border:none;cursor:pointer;transition:all .3s;font-family:var(--font-body)}
+.demo-cta .btn-primary:hover{box-shadow:0 8px 30px rgba(0,240,255,.3);transform:translateY(-2px)}
+
+@media(max-width:700px){
+  .demo{padding:80px 20px 40px}
+  .step{grid-template-columns:1fr;gap:12px}
+  .step-num{width:48px;height:48px;font-size:1.1rem}
+  .nav{padding:14px 20px}
+}
+</style>
+</head>
+<body>
+<nav class="nav">
+  <div class="nav-logo" onclick="location.href='index.html'"><span class="dot"></span>SonicForge AI</div>
+  <a href="index.html"><button class="nav-back">← 返回首页</button></a>
+</nav>
+
+<div class="demo">
+  <div class="demo-header">
+    <h1>产品演示</h1>
+    <p>四步了解 SonicForge AI 如何将你的创意转化为专业级音乐。</p>
+  </div>
+
+  <div class="steps" id="steps">
+    <div class="step active" data-step="1">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <h3>选择风格与参数</h3>
+        <p>从 50+ 种音乐风格中选择目标风格，调节 BPM、情感强度、复杂度等参数，或直接输入自然语言描述你想要的音乐氛围。</p>
+        <div class="demo-visual"><canvas id="viz1"></canvas></div>
+      </div>
+    </div>
+    <div class="step" data-step="2">
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <h3>AI 分析与生成</h3>
+        <p>AI 引擎分析你的输入，结合风格特征数据库，构建和声进行、编排节奏型、合成音色，整个过程仅需数秒。</p>
+        <div class="demo-visual"><canvas id="viz2"></canvas></div>
+      </div>
+    </div>
+    <div class="step" data-step="3">
+      <div class="step-num">3</div>
+      <div class="step-content">
+        <h3>试听与调整</h3>
+        <p>在线试听生成的音乐，支持分轨播放（鼓组、贝斯、旋律、和声），可针对单轨进行微调或重新生成。</p>
+        <div class="demo-visual"><canvas id="viz3"></canvas></div>
+      </div>
+    </div>
+    <div class="step" data-step="4">
+      <div class="step-num">4</div>
+      <div class="step-content">
+        <h3>导出与使用</h3>
+        <p>满意后导出为 WAV/FLAC/MP3 格式，支持多轨分离导出。所有生成内容附带版权证书，可直接用于商业项目。</p>
+        <div class="demo-visual"><canvas id="viz4"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="demo-progress">
+    <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-labels"><span>步骤 1</span><span>步骤 2</span><span>步骤 3</span><span>步骤 4</span><span>完成</span></div>
+  </div>
+
+  <div class="demo-cta">
+    <button class="btn-primary" onclick="location.href='studio.html'">进入工作室体验</button>
+  </div>
+</div>
+
+<footer style="padding:40px 48px;border-top:1px solid rgba(255,255,255,.04);text-align:center;margin-top:40px">
+  <p style="font-size:.8rem;color:var(--text3);margin-bottom:12px">
+    <a href="index.html" style="color:var(--text2);margin:0 12px">首页</a>
+    <a href="studio.html" style="color:var(--text2);margin:0 12px">创作工作室</a>
+    <a href="community.html" style="color:var(--text2);margin:0 12px">创作者社区</a>
+    <a href="api.html" style="color:var(--text2);margin:0 12px">API 文档</a>
+    <a href="about.html" style="color:var(--text2);margin:0 12px">关于我们</a>
+  </p>
+  <p style="font-size:.75rem;color:var(--text3)">© 2026 SonicForge Technologies</p>
+</footer>
+
+<script>
+// Step activation on scroll + click navigation
+const steps = document.querySelectorAll('.step');
+const progressFill = document.getElementById('progressFill');
+let currentStep = 1;
+
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      const step = parseInt(e.target.dataset.step);
+      currentStep = step;
+      progressFill.style.width = (step / 4 * 100) + '%';
+      steps.forEach(s => s.classList.remove('active'));
+      e.target.classList.add('active');
+    }
+  });
+}, { threshold: 0.5 });
+steps.forEach(s => observer.observe(s));
+
+// Click on progress labels to jump
+document.querySelectorAll('.progress-labels span').forEach((label, idx) => {
+  label.style.cursor = 'pointer';
+  label.addEventListener('click', () => {
+    const targetStep = idx + 1;
+    const el = document.querySelector(`[data-step="${targetStep}"]`);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
+});
+
+// Canvas visualizations for each step
+function initViz(id, type) {
+  const canvas = document.getElementById(id);
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  function resize() {
+    canvas.width = canvas.offsetWidth * 2;
+    canvas.height = canvas.offsetHeight * 2;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+  const w = () => canvas.width, h = () => canvas.height;
+  let t = 0;
+
+  function draw() {
+    ctx.clearRect(0, 0, w(), h());
+    t += 0.02;
+
+    if (type === 'params') {
+      for (let i = 0; i < 12; i++) {
+        const x = w()/2 + Math.cos(t + i * 0.5) * (100 + i * 15);
+        const y = h()/2 + Math.sin(t * 0.7 + i * 0.8) * (40 + i * 5);
+        const r = 4 + Math.sin(t + i) * 2;
+        ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(0,240,255,${0.3 + Math.sin(t+i)*0.2})`;
+        ctx.fill();
+      }
+    } else if (type === 'generate') {
+      for (let i = 0; i < 8; i++) {
+        for (let j = 0; j < 8; j++) {
+          const x1 = w() * 0.2, y1 = h() * (0.15 + j * 0.1);
+          const x2 = w() * 0.8, y2 = h() * (0.15 + i * 0.1);
+          const alpha = 0.03 + 0.03 * Math.sin(t + i + j);
+          ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2);
+          ctx.strokeStyle = `rgba(255,45,138,${alpha})`; ctx.lineWidth = 1; ctx.stroke();
+        }
+      }
+      for (let i = 0; i < 8; i++) {
+        const y = h() * (0.15 + i * 0.1);
+        ctx.beginPath(); ctx.arc(w()*0.2, y, 5, 0, Math.PI*2);
+        ctx.fillStyle = 'rgba(0,240,255,0.6)'; ctx.fill();
+        ctx.beginPath(); ctx.arc(w()*0.8, y, 5, 0, Math.PI*2);
+        ctx.fillStyle = 'rgba(255,45,138,0.6)'; ctx.fill();
+      }
+    } else if (type === 'tracks') {
+      const colors = ['0,240,255','255,45,138','255,179,0','168,255,0'];
+      const labels = ['Drums','Bass','Melody','Chords'];
+      for (let tr = 0; tr < 4; tr++) {
+        const yBase = h() * (0.2 + tr * 0.18);
+        ctx.beginPath();
+        for (let x = 0; x < w(); x += 2) {
+          const amp = 15 + 10 * Math.sin(t * 0.5 + tr);
+          const y = yBase + Math.sin(x * 0.02 + t * (1 + tr * 0.3)) * amp;
+          if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        }
+        ctx.strokeStyle = `rgba(${colors[tr]},0.6)`; ctx.lineWidth = 2; ctx.stroke();
+        ctx.fillStyle = `rgba(${colors[tr]},0.5)`;
+        ctx.font = '18px JetBrains Mono'; ctx.fillText(labels[tr], 10, yBase - 20);
+      }
+    } else if (type === 'export') {
+      const formats = ['WAV','FLAC','MP3','STEMS'];
+      for (let i = 0; i < 4; i++) {
+        const x = w() * (0.15 + i * 0.22);
+        const y = h()/2 + Math.sin(t + i * 1.2) * 15;
+        ctx.fillStyle = 'rgba(0,240,255,0.1)';
+        ctx.fillRect(x - 30, y - 20, 60, 40);
+        ctx.strokeStyle = 'rgba(0,240,255,0.3)';
+        ctx.strokeRect(x - 30, y - 20, 60, 40);
+        ctx.fillStyle = 'rgba(0,240,255,0.7)';
+        ctx.font = '16px JetBrains Mono'; ctx.textAlign = 'center';
+        ctx.fillText(formats[i], x, y + 5);
+      }
+      ctx.textAlign = 'start';
+    }
+    requestAnimationFrame(draw);
+  }
+  draw();
+}
+
+initViz('viz1', 'params');
+initViz('viz2', 'generate');
+initViz('viz3', 'tracks');
+initViz('viz4', 'export');
+</script>
+</body>
+</html>

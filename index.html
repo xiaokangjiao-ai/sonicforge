@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SonicForge AI — 智能音乐创作平台</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Noto+Sans+SC:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-client.js"></script>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#08080c;--bg2:#0e0e14;--bg3:#16161f;
+  --text:#e8e6f0;--text2:#9896a8;--text3:#5c5a6e;
+  --cyan:#00f0ff;--magenta:#ff2d8a;--amber:#ffb300;--lime:#a8ff00;
+  --cyan-g:rgba(0,240,255,.12);--magenta-g:rgba(255,45,138,.12);
+  --radius:16px;--radius-sm:10px;
+  --font-display:'Outfit','Noto Sans SC',sans-serif;
+  --font-body:'Noto Sans SC','Outfit',sans-serif;
+  --font-mono:'JetBrains Mono',monospace;
+}
+html{scroll-behavior:smooth;font-size:16px}
+body{background:var(--bg);color:var(--text);font-family:var(--font-body);overflow-x:hidden;line-height:1.6}
+::selection{background:var(--cyan);color:var(--bg)}
+a{color:inherit;text-decoration:none}
+img{max-width:100%;display:block}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--bg3);border-radius:3px}
+
+/* === NAV === */
+.nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:20px 48px;display:flex;align-items:center;justify-content:space-between;backdrop-filter:blur(20px);background:rgba(8,8,12,.7);border-bottom:1px solid rgba(255,255,255,.04);transition:all .3s}
+.nav-logo{font-family:var(--font-display);font-weight:800;font-size:1.4rem;letter-spacing:-.02em;display:flex;align-items:center;gap:10px}
+.nav-logo .dot{width:10px;height:10px;border-radius:50%;background:var(--cyan);box-shadow:0 0 12px var(--cyan);animation:pulse-dot 2s ease infinite}
+.nav-links{display:flex;gap:32px;font-size:.875rem;font-weight:500;color:var(--text2)}
+.nav-links a{transition:color .2s;position:relative}
+.nav-links a:hover{color:var(--text)}
+.nav-links a::after{content:'';position:absolute;bottom:-4px;left:0;width:0;height:2px;background:var(--cyan);transition:width .3s}
+.nav-links a:hover::after{width:100%}
+.nav-cta{padding:10px 24px;border-radius:100px;background:var(--cyan);color:var(--bg);font-weight:600;font-size:.875rem;border:none;cursor:pointer;transition:all .25s}
+.nav-cta:hover{box-shadow:0 0 30px rgba(0,240,255,.4);transform:translateY(-1px)}
+.nav-actions{display:flex;gap:12px;align-items:center}
+.nav-btn{padding:8px 20px;border-radius:100px;font-weight:500;font-size:.875rem;cursor:pointer;transition:all .25s;border:none}
+.nav-btn-ghost{background:transparent;color:var(--text2);border:1px solid rgba(255,255,255,.15)}
+.nav-btn-ghost:hover{color:var(--text);border-color:var(--text)}
+.nav-user{display:flex;gap:12px;align-items:center}
+.nav-user-email{font-size:.875rem;color:var(--text2);font-family:var(--font-mono)}
+
+/* === HERO === */
+.hero{min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:120px 48px 80px;position:relative;overflow:hidden}
+.hero-bg{position:absolute;inset:0;z-index:0}
+.hero-bg canvas{width:100%;height:100%}
+.hero-content{position:relative;z-index:2;max-width:900px}
+.hero-tag{display:inline-flex;align-items:center;gap:8px;padding:8px 20px;border-radius:100px;border:1px solid rgba(0,240,255,.25);background:rgba(0,240,255,.06);font-family:var(--font-mono);font-size:.75rem;color:var(--cyan);letter-spacing:.08em;text-transform:uppercase;margin-bottom:32px}
+.hero-tag .blink{animation:blink 1s step-end infinite}
+.hero h1{font-family:var(--font-display);font-size:clamp(3rem,8vw,6.5rem);font-weight:900;line-height:1;letter-spacing:-.04em;margin-bottom:24px}
+.hero h1 .gradient{background:linear-gradient(135deg,var(--cyan),var(--magenta) 60%,var(--amber));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero-sub{font-size:1.25rem;color:var(--text2);max-width:600px;margin:0 auto 48px;line-height:1.7;font-weight:300}
+.hero-actions{display:flex;gap:16px;justify-content:center;flex-wrap:wrap}
+.btn-primary{padding:16px 40px;border-radius:100px;background:linear-gradient(135deg,var(--cyan),#00b4d8);color:var(--bg);font-weight:700;font-size:1rem;border:none;cursor:pointer;transition:all .3s;font-family:var(--font-body)}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 40px rgba(0,240,255,.35)}
+.btn-ghost{padding:16px 40px;border-radius:100px;background:transparent;color:var(--text);font-weight:500;font-size:1rem;border:1px solid rgba(255,255,255,.15);cursor:pointer;transition:all .3s;font-family:var(--font-body)}
+.btn-ghost:hover{border-color:var(--text);background:rgba(255,255,255,.05)}
+
+/* Waveform visualizer */
+.hero-visual{margin-top:64px;width:100%;max-width:800px;height:120px;position:relative}
+.waveform-bars{display:flex;align-items:center;justify-content:center;gap:3px;height:100%}
+.waveform-bars .bar{width:4px;border-radius:4px;background:linear-gradient(to top,var(--cyan),var(--magenta));opacity:.7;animation:wave-bar var(--dur) ease-in-out infinite alternate}
+
+/* Stats row */
+.hero-stats{display:flex;gap:64px;justify-content:center;margin-top:48px}
+.hero-stat{text-align:center}
+.hero-stat .num{font-family:var(--font-display);font-size:2.5rem;font-weight:800;letter-spacing:-.03em}
+.hero-stat .num.c1{color:var(--cyan)}
+.hero-stat .num.c2{color:var(--magenta)}
+.hero-stat .num.c3{color:var(--amber)}
+.hero-stat .label{font-size:.8rem;color:var(--text3);margin-top:4px;text-transform:uppercase;letter-spacing:.1em}
+
+/* === SECTION COMMON === */
+section{padding:120px 48px}
+.section-label{font-family:var(--font-mono);font-size:.75rem;color:var(--cyan);letter-spacing:.15em;text-transform:uppercase;margin-bottom:12px}
+.section-title{font-family:var(--font-display);font-size:clamp(2rem,4vw,3.5rem);font-weight:800;letter-spacing:-.03em;line-height:1.1;margin-bottom:20px}
+.section-desc{color:var(--text2);font-size:1.1rem;max-width:560px;line-height:1.7;font-weight:300}
+
+/* === GENRE SHOWCASE === */
+.genres{background:var(--bg2);position:relative}
+.genres::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(0,240,255,.3),transparent)}
+.genres-header{text-align:center;margin-bottom:72px}
+.genres-header .section-desc{margin:0 auto}
+.genre-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px;max-width:1200px;margin:0 auto}
+.genre-card{position:relative;border-radius:var(--radius);padding:32px 28px;background:var(--bg);border:1px solid rgba(255,255,255,.05);cursor:pointer;transition:all .35s;overflow:hidden}
+.genre-card::before{content:'';position:absolute;inset:0;opacity:0;transition:opacity .35s;border-radius:var(--radius)}
+.genre-card:hover{transform:translateY(-4px);border-color:rgba(255,255,255,.1)}
+.genre-card:hover::before{opacity:1}
+.genre-card .card-content{position:relative;z-index:2}
+.genre-icon{width:56px;height:56px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.6rem;margin-bottom:20px;position:relative;z-index:2}
+.genre-card h3{font-family:var(--font-display);font-size:1.3rem;font-weight:700;margin-bottom:8px;letter-spacing:-.01em}
+.genre-card p{font-size:.875rem;color:var(--text2);line-height:1.6;margin-bottom:20px}
+.genre-tags{display:flex;flex-wrap:wrap;gap:6px}
+.genre-tags span{padding:4px 12px;border-radius:100px;font-size:.7rem;font-family:var(--font-mono);background:rgba(255,255,255,.05);color:var(--text3);letter-spacing:.03em}
+.genre-card .play-btn{position:absolute;bottom:28px;right:28px;width:44px;height:44px;border-radius:50%;border:1px solid rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;z-index:2;transition:all .3s;background:transparent}
+.genre-card:hover .play-btn{border-color:var(--cyan);background:rgba(0,240,255,.1)}
+.genre-card:hover .play-btn svg{fill:var(--cyan)}
+.genre-card .play-btn svg{width:16px;height:16px;fill:var(--text3);transition:fill .3s}
+
+/* Card color themes */
+.genre-card[data-genre="electronic"]::before{background:linear-gradient(135deg,rgba(0,240,255,.08),transparent 60%)}
+.genre-card[data-genre="electronic"] .genre-icon{background:rgba(0,240,255,.12);color:var(--cyan)}
+.genre-card[data-genre="jazz"]::before{background:linear-gradient(135deg,rgba(255,179,0,.08),transparent 60%)}
+.genre-card[data-genre="jazz"] .genre-icon{background:rgba(255,179,0,.12);color:var(--amber)}
+.genre-card[data-genre="classical"]::before{background:linear-gradient(135deg,rgba(168,255,0,.08),transparent 60%)}
+.genre-card[data-genre="classical"] .genre-icon{background:rgba(168,255,0,.12);color:var(--lime)}
+.genre-card[data-genre="hiphop"]::before{background:linear-gradient(135deg,rgba(255,45,138,.08),transparent 60%)}
+.genre-card[data-genre="hiphop"] .genre-icon{background:rgba(255,45,138,.12);color:var(--magenta)}
+.genre-card[data-genre="lofi"]::before{background:linear-gradient(135deg,rgba(160,120,255,.08),transparent 60%)}
+.genre-card[data-genre="lofi"] .genre-icon{background:rgba(160,120,255,.12);color:#a078ff}
+.genre-card[data-genre="cinematic"]::before{background:linear-gradient(135deg,rgba(255,100,50,.08),transparent 60%)}
+.genre-card[data-genre="cinematic"] .genre-icon{background:rgba(255,100,50,.12);color:#ff6432}
+.genre-card[data-genre="pop"]::before{background:linear-gradient(135deg,rgba(255,80,180,.08),transparent 60%)}
+.genre-card[data-genre="pop"] .genre-icon{background:rgba(255,80,180,.12);color:#ff50b4}
+.genre-card[data-genre="ambient"]::before{background:linear-gradient(135deg,rgba(0,200,180,.08),transparent 60%)}
+.genre-card[data-genre="ambient"] .genre-icon{background:rgba(0,200,180,.12);color:#00c8b4}
+
+/* Mini waveform on card */
+.mini-wave{display:flex;align-items:end;gap:2px;height:32px;margin-bottom:16px}
+.mini-wave .mw-bar{width:3px;border-radius:2px;background:currentColor;opacity:.35;animation:wave-bar var(--d) ease-in-out infinite alternate}
+
+/* === FEATURES === */
+.features{max-width:1200px;margin:0 auto}
+.features-layout{display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center;margin-top:64px}
+.features-list{display:flex;flex-direction:column;gap:32px}
+.feature-item{display:flex;gap:20px;padding:24px;border-radius:var(--radius-sm);transition:background .3s;cursor:default}
+.feature-item:hover{background:rgba(255,255,255,.03)}
+.feature-icon{width:48px;height:48px;border-radius:12px;background:var(--bg3);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:1.2rem}
+.feature-item h4{font-family:var(--font-display);font-weight:600;font-size:1.05rem;margin-bottom:6px}
+.feature-item p{font-size:.875rem;color:var(--text2);line-height:1.6}
+
+/* Visual panel */
+.features-visual{position:relative;height:480px;border-radius:var(--radius);background:var(--bg2);border:1px solid rgba(255,255,255,.05);overflow:hidden;display:flex;align-items:center;justify-content:center}
+.viz-rings{position:relative;width:300px;height:300px}
+.viz-ring{position:absolute;border-radius:50%;border:1px solid;animation:spin var(--speed) linear infinite}
+.viz-ring:nth-child(1){inset:0;border-color:rgba(0,240,255,.2);--speed:12s}
+.viz-ring:nth-child(2){inset:30px;border-color:rgba(255,45,138,.15);--speed:18s;animation-direction:reverse}
+.viz-ring:nth-child(3){inset:60px;border-color:rgba(255,179,0,.12);--speed:24s}
+.viz-ring:nth-child(4){inset:90px;border-color:rgba(168,255,0,.1);--speed:8s;animation-direction:reverse}
+.viz-center{position:absolute;inset:110px;border-radius:50%;background:radial-gradient(circle,rgba(0,240,255,.15),transparent);display:flex;align-items:center;justify-content:center}
+.viz-center span{font-family:var(--font-mono);font-size:.7rem;color:var(--cyan);letter-spacing:.1em}
+
+/* === MONETIZATION === */
+.monetize{background:var(--bg2);position:relative}
+.monetize::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,45,138,.3),transparent)}
+.monetize-header{text-align:center;margin-bottom:72px}
+.monetize-header .section-desc{margin:0 auto}
+.money-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:24px;max-width:1200px;margin:0 auto}
+.money-card{border-radius:var(--radius);padding:36px 32px;background:var(--bg);border:1px solid rgba(255,255,255,.05);position:relative;overflow:hidden;transition:all .35s}
+.money-card:hover{transform:translateY(-3px);border-color:rgba(255,255,255,.1)}
+.money-card .mc-num{font-family:var(--font-display);font-size:4rem;font-weight:900;line-height:1;margin-bottom:16px;opacity:.08;position:absolute;top:20px;right:24px}
+.money-card .mc-icon{font-size:2rem;margin-bottom:16px}
+.money-card h3{font-family:var(--font-display);font-size:1.2rem;font-weight:700;margin-bottom:10px}
+.money-card p{font-size:.875rem;color:var(--text2);line-height:1.7;margin-bottom:16px}
+.money-card .mc-revenue{font-family:var(--font-mono);font-size:.8rem;padding:6px 14px;border-radius:100px;display:inline-block}
+.mc-high{background:rgba(0,240,255,.1);color:var(--cyan)}
+.mc-mid{background:rgba(255,179,0,.1);color:var(--amber)}
+.mc-grow{background:rgba(168,255,0,.1);color:var(--lime)}
+
+/* Pricing tiers */
+.pricing{max-width:1000px;margin:80px auto 0}
+.pricing-title{text-align:center;font-family:var(--font-display);font-size:1.8rem;font-weight:700;margin-bottom:48px}
+.pricing-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.price-card{border-radius:var(--radius);padding:36px 28px;background:var(--bg);border:1px solid rgba(255,255,255,.05);text-align:center;transition:all .35s;position:relative}
+.price-card.featured{border-color:var(--cyan);background:linear-gradient(180deg,rgba(0,240,255,.04),var(--bg))}
+.price-card.featured::before{content:'最受欢迎';position:absolute;top:-12px;left:50%;transform:translateX(-50%);padding:4px 16px;border-radius:100px;background:var(--cyan);color:var(--bg);font-size:.7rem;font-weight:700;letter-spacing:.05em}
+.price-card:hover{transform:translateY(-3px)}
+.price-card .tier-name{font-family:var(--font-display);font-weight:600;font-size:1rem;color:var(--text2);margin-bottom:12px}
+.price-card .tier-price{font-family:var(--font-display);font-size:2.8rem;font-weight:800;letter-spacing:-.03em;margin-bottom:4px}
+.price-card .tier-price span{font-size:.9rem;font-weight:400;color:var(--text3)}
+.price-card .tier-desc{font-size:.8rem;color:var(--text3);margin-bottom:24px}
+.price-card ul{list-style:none;text-align:left;display:flex;flex-direction:column;gap:12px;margin-bottom:28px}
+.price-card ul li{font-size:.85rem;color:var(--text2);display:flex;align-items:center;gap:10px}
+.price-card ul li::before{content:'✓';color:var(--cyan);font-weight:700;font-size:.75rem}
+.price-card .tier-btn{width:100%;padding:14px;border-radius:100px;border:1px solid rgba(255,255,255,.12);background:transparent;color:var(--text);font-weight:600;font-size:.9rem;cursor:pointer;transition:all .3s;font-family:var(--font-body)}
+.price-card .tier-btn:hover{background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.2)}
+.price-card.featured .tier-btn{background:var(--cyan);color:var(--bg);border-color:var(--cyan)}
+.price-card.featured .tier-btn:hover{box-shadow:0 0 30px rgba(0,240,255,.3)}
+
+/* === FOOTER === */
+.footer{padding:64px 48px 40px;border-top:1px solid rgba(255,255,255,.04);text-align:center}
+.footer p{font-size:.8rem;color:var(--text3)}
+.footer a{transition:color .2s}
+.footer a:hover{color:var(--cyan) !important}
+
+/* === ANIMATIONS === */
+@keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:.4}}
+@keyframes blink{50%{opacity:0}}
+@keyframes wave-bar{0%{height:var(--h1)}100%{height:var(--h2)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes fade-up{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+
+.fade-up{animation:fade-up .8s ease both}
+.fade-up-d1{animation-delay:.1s}
+.fade-up-d2{animation-delay:.2s}
+.fade-up-d3{animation-delay:.3s}
+.fade-up-d4{animation-delay:.4s}
+
+/* === RESPONSIVE === */
+@media(max-width:900px){
+  .nav{padding:16px 24px}
+  .nav-links{display:none}
+  section{padding:80px 24px}
+  .hero{padding:100px 24px 60px}
+  .hero-stats{gap:32px;flex-wrap:wrap}
+  .features-layout{grid-template-columns:1fr;gap:48px}
+  .features-visual{height:320px}
+  .pricing-grid{grid-template-columns:1fr 1fr}
+  .genre-grid{grid-template-columns:1fr 1fr}
+  .money-grid{grid-template-columns:1fr}
+}
+@media(max-width:600px){
+  .genre-grid{grid-template-columns:1fr}
+  .hero h1{font-size:2.5rem}
+  .pricing-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<!-- Navigation -->
+<nav class="nav">
+  <div class="nav-logo"><span class="dot"></span>SonicForge AI</div>
+  <div class="nav-links">
+    <a href="#genres">音乐风格</a>
+    <a href="#features">核心能力</a>
+    <a href="#monetize">商业模式</a>
+  </div>
+  <div class="nav-actions">
+    <button class="nav-btn nav-btn-ghost" id="loginBtn" onclick="location.href='studio.html'">登录</button>
+    <a href="studio.html"><button class="nav-cta">开始创作</button></a>
+  </div>
+  <div class="nav-user" id="navUser" style="display:none">
+    <span class="nav-user-email" id="navUserEmail"></span>
+    <button class="nav-btn nav-btn-ghost" onclick="logoutFromIndex()">退出</button>
+  </div>
+</nav>
+
+<!-- Hero Section -->
+<section class="hero">
+  <div class="hero-bg"><canvas id="heroCanvas"></canvas></div>
+  <div class="hero-content">
+    <div class="hero-tag fade-up">AI-Powered Music Engine v3.0 <span class="blink">_</span></div>
+    <h1 class="fade-up fade-up-d1">用 AI 释放<br><span class="gradient">无限音乐可能</span></h1>
+    <p class="hero-sub fade-up fade-up-d2">从电子到古典，从嘻哈到氛围音乐——SonicForge AI 能在数秒内生成专业级多风格音乐，为创作者、开发者和品牌赋能。</p>
+    <div class="hero-actions fade-up fade-up-d3">
+      <a href="studio.html"><button class="btn-primary">立即体验</button></a>
+      <a href="demo.html"><button class="btn-ghost">观看演示 ▶</button></a>
+    </div>
+    <div class="hero-visual fade-up fade-up-d4">
+      <div class="waveform-bars" id="waveform"></div>
+    </div>
+    <div class="hero-stats fade-up fade-up-d4">
+      <div class="hero-stat"><div class="num c1">50+</div><div class="label">音乐风格</div></div>
+      <div class="hero-stat"><div class="num c2">128</div><div class="label">乐器音色</div></div>
+      <div class="hero-stat"><div class="num c3">4K</div><div class="label">输出品质</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- Genre Showcase -->
+<section class="genres" id="genres">
+  <div class="genres-header">
+    <div class="section-label">// Genre Engine</div>
+    <h2 class="section-title">驾驭每一种风格</h2>
+    <p class="section-desc">深度学习数万首经典曲目，精准还原每种风格的和声、节奏与情感表达。</p>
+  </div>
+  <div class="genre-grid">
+    <div class="genre-card" data-genre="electronic" onclick="location.href='genre.html?genre=electronic'">
+      <div class="card-content">
+        <div class="genre-icon">⚡</div>
+        <div class="mini-wave" id="mw-electronic"></div>
+        <h3>Electronic</h3>
+        <p>从 Deep House 到 Drum & Bass，精准合成器音色与节拍编排。</p>
+        <div class="genre-tags"><span>EDM</span><span>Techno</span><span>House</span><span>Trance</span></div>
+      </div>
+      <div class="play-btn"><svg viewBox="0 0 24 24"><polygon points="8,5 19,12 8,19"/></svg></div>
+    </div>
+    <div class="genre-card" data-genre="jazz" onclick="location.href='genre.html?genre=jazz'">
+      <div class="card-content">
+        <div class="genre-icon">🎷</div>
+        <div class="mini-wave" id="mw-jazz"></div>
+        <h3>Jazz</h3>
+        <p>即兴和弦进行、Swing 节奏与蓝调音阶的完美融合。</p>
+        <div class="genre-tags"><span>Bebop</span><span>Swing</span><span>Fusion</span><span>Cool</span></div>
+      </div>
+      <div class="play-btn"><svg viewBox="0 0 24 24"><polygon points="8,5 19,12 8,19"/></svg></div>
+    </div>
+    <div class="genre-card" data-genre="classical" onclick="location.href='genre.html?genre=classical'">
+      <div class="card-content">
+        <div class="genre-icon">🎻</div>
+        <div class="mini-wave" id="mw-classical"></div>
+        <h3>Classical</h3>
+        <p>从巴洛克到浪漫主义，管弦乐编排与对位法精准呈现。</p>
+        <div class="genre-tags"><span>交响乐</span><span>室内乐</span><span>协奏曲</span><span>奏鸣曲</span></div>
+      </div>
+      <div class="play-btn"><svg viewBox="0 0 24 24"><polygon points="8,5 19,12 8,19"/></svg></div>
+    </div>
+    <div class="genre-card" data-genre="hiphop" onclick="location.href='genre.html?genre=hiphop'">
+      <div class="card-content">
+        <div class="genre-icon">🎤</div>
+        <div class="mini-wave" id="mw-hiphop"></div>
+        <h3>Hip-Hop</h3>
+        <p>808 低音、Trap 节拍与采样拼贴的街头律动。</p>
+        <div class="genre-tags"><span>Trap</span><span>Boom Bap</span><span>Drill</span><span>Lo-fi Rap</span></div>
+      </div>
+      <div class="play-btn"><svg viewBox="0 0 24 24"><polygon points="8,5 19,12 8,19"/></svg></div>
+    </div>
+    <div class="genre-card" data-genre="lofi" onclick="location.href='genre.html?genre=lofi'">
+      <div class="card-content">
+        <div class="genre-icon">🌙</div>
+        <div class="mini-wave" id="mw-lofi"></div>
+        <h3>Lo-Fi</h3>
+        <p>温暖的黑胶质感、慵懒节拍与柔和钢琴的学习伴侣。</p>
+        <div class="genre-tags"><span>Chill</span><span>Study</span><span>Vinyl</span><span>Downtempo</span></div>
+      </div>
+      <div class="play-btn"><svg viewBox="0 0 24 24"><polygon points="8,5 19,12 8,19"/></svg></div>
+    </div>
+    <div class="genre-card" data-genre="cinematic" onclick="location.href='genre.html?genre=cinematic'">
+      <div class="card-content">
+        <div class="genre-icon">🎬</div>
+        <div class="mini-wave" id="mw-cinematic"></div>
+        <h3>Cinematic</h3>
+        <p>史诗级管弦乐与电子音效交织的影视级配乐。</p>
+        <div class="genre-tags"><span>史诗</span><span>悬疑</span><span>科幻</span><span>纪录片</span></div>
+      </div>
+      <div class="play-btn"><svg viewBox="0 0 24 24"><polygon points="8,5 19,12 8,19"/></svg></div>
+    </div>
+    <div class="genre-card" data-genre="pop" onclick="location.href='genre.html?genre=pop'">
+      <div class="card-content">
+        <div class="genre-icon">🎵</div>
+        <div class="mini-wave" id="mw-pop"></div>
+        <h3>Pop</h3>
+        <p>朗朗上口的旋律、精致的编曲与商业级混音品质。</p>
+        <div class="genre-tags"><span>Synth Pop</span><span>Dance Pop</span><span>Ballad</span><span>Indie</span></div>
+      </div>
+      <div class="play-btn"><svg viewBox="0 0 24 24"><polygon points="8,5 19,12 8,19"/></svg></div>
+    </div>
+    <div class="genre-card" data-genre="ambient" onclick="location.href='genre.html?genre=ambient'">
+      <div class="card-content">
+        <div class="genre-icon">🌊</div>
+        <div class="mini-wave" id="mw-ambient"></div>
+        <h3>Ambient</h3>
+        <p>沉浸式声景设计，从冥想空间到游戏世界的背景音。</p>
+        <div class="genre-tags"><span>Drone</span><span>Soundscape</span><span>Meditation</span><span>Space</span></div>
+      </div>
+      <div class="play-btn"><svg viewBox="0 0 24 24"><polygon points="8,5 19,12 8,19"/></svg></div>
+    </div>
+  </div>
+</section>
+
+<!-- Features Section -->
+<section class="features" id="features">
+  <div class="section-label">// CoreTech</div>
+  <h2 class="section-title">不只是生成，是真正的创作</h2>
+  <p class="section-desc">融合前沿音频 AI 与音乐理论，提供专业级的创作体验。</p>
+  <div class="features-layout">
+    <div class="features-list">
+      <div class="feature-item">
+        <div class="feature-icon">🧠</div>
+        <div>
+          <h4>风格迁移引擎</h4>
+          <p>输入任意参考曲目，AI 分析其风格特征并生成全新原创作品，保留神韵但绝不抄袭。</p>
+        </div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon">🎛️</div>
+        <div>
+          <h4>参数化控制</h4>
+          <p>精确调节 BPM、调式、乐器配置、情感强度等 20+ 维度，完全掌控输出结果。</p>
+        </div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon">🔗</div>
+        <div>
+          <h4>API 无缝集成</h4>
+          <p>RESTful API 支持实时调用，适配游戏、短视频、播客等场景的自动化配乐需求。</p>
+        </div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon">📐</div>
+        <div>
+          <h4>分轨输出</h4>
+          <p>支持多轨分离导出（鼓组、贝斯、旋律、和声），方便后期混音与二次创作。</p>
+        </div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon">⚖️</div>
+        <div>
+          <h4>版权清晰</h4>
+          <p>所有生成音乐均为原创，附带区块链存证的版权证书，商用无忧。</p>
+        </div>
+      </div>
+    </div>
+    <div class="features-visual">
+      <div class="viz-rings">
+        <div class="viz-ring"></div>
+        <div class="viz-ring"></div>
+        <div class="viz-ring"></div>
+        <div class="viz-ring"></div>
+        <div class="viz-center"><span>AI CORE</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Monetization Section -->
+<section class="monetize" id="monetize">
+  <div class="monetize-header">
+    <div class="section-label">// Business Model</div>
+    <h2 class="section-title">六大盈利引擎</h2>
+    <p class="section-desc">从个人创作者到企业客户，构建多层次、可持续的收入体系。</p>
+  </div>
+  <div class="money-grid">
+    <div class="money-card">
+      <div class="mc-num">01</div>
+      <div class="mc-icon">💎</div>
+      <h3>订阅制 SaaS</h3>
+      <p>按月/年付费解锁不同等级的生成额度、音质与功能。核心现金流来源，可预测性强。</p>
+      <span class="mc-revenue mc-high">收入占比 40%</span>
+    </div>
+    <div class="money-card">
+      <div class="mc-num">02</div>
+      <div class="mc-icon">🔌</div>
+      <h3>API 按量计费</h3>
+      <p>面向游戏公司、短视频平台、MCN 机构提供按调用次数计费的 API 服务。</p>
+      <span class="mc-revenue mc-high">收入占比 25%</span>
+    </div>
+    <div class="money-card">
+      <div class="mc-num">03</div>
+      <div class="mc-icon">🏢</div>
+      <h3>企业定制方案</h3>
+      <p>为影视、广告、游戏行业提供专属模型微调与私有化部署，客单价高。</p>
+      <span class="mc-revenue mc-mid">收入占比 20%</span>
+    </div>
+    <div class="money-card">
+      <div class="mc-num">04</div>
+      <div class="mc-icon">🎧</div>
+      <h3>音乐素材市场</h3>
+      <p>搭建创作者社区，AI 生成的优质素材可上架交易，平台抽取佣金。</p>
+      <span class="mc-revenue mc-grow">收入占比 8%</span>
+    </div>
+    <div class="money-card">
+      <div class="mc-num">05</div>
+      <div class="mc-icon">🎓</div>
+      <h3>教育授权</h3>
+      <p>面向音乐院校和在线教育平台提供教学授权与课程合作，拓展品牌影响力。</p>
+      <span class="mc-revenue mc-grow">收入占比 4%</span>
+    </div>
+    <div class="money-card">
+      <div class="mc-num">06</div>
+      <div class="mc-icon">🤝</div>
+      <h3>品牌联名 & IP</h3>
+      <p>与音乐人、品牌联名推出限定音色包与风格模型，粉丝经济变现。</p>
+      <span class="mc-revenue mc-grow">收入占比 3%</span>
+    </div>
+  </div>
+
+  <!-- Pricing Tiers -->
+  <div class="pricing">
+    <h3 class="pricing-title">订阅方案示例</h3>
+    <div class="pricing-grid">
+      <div class="price-card">
+        <div class="tier-name">Free</div>
+        <div class="tier-price">¥0<span>/月</span></div>
+        <div class="tier-desc">免费试用</div>
+        <ul>
+          <li>每日 3 首生成额度</li>
+          <li>MP3 格式输出</li>
+          <li>基础风格选择</li>
+          <li>社区支持</li>
+        </ul>
+        <a href="signup.html?plan=free"><button class="tier-btn">免费开始</button></a>
+      </div>
+      <div class="price-card">
+        <div class="tier-name">Starter</div>
+        <div class="tier-price">¥29<span>/月</span></div>
+        <div class="tier-desc">个人创作者入门</div>
+        <ul>
+          <li>每月 30 首生成额度</li>
+          <li>MP3 格式输出</li>
+          <li>基础风格选择</li>
+          <li>社区支持</li>
+        </ul>
+        <a href="signup.html?plan=starter"><button class="tier-btn">选择方案</button></a>
+      </div>
+      <div class="price-card featured">
+        <div class="tier-name">Pro</div>
+        <div class="tier-price">¥99<span>/月</span></div>
+        <div class="tier-desc">专业音乐人首选</div>
+        <ul>
+          <li>每月 200 首生成额度</li>
+          <li>WAV/FLAC 无损输出</li>
+          <li>全风格 + 分轨导出</li>
+          <li>商用版权授权</li>
+          <li>优先生成队列</li>
+        </ul>
+        <a href="signup.html?plan=pro"><button class="tier-btn">选择方案</button></a>
+      </div>
+      <div class="price-card">
+        <div class="tier-name">Enterprise</div>
+        <div class="tier-price">定制<span></span></div>
+        <div class="tier-desc">企业级解决方案</div>
+        <ul>
+          <li>无限生成额度</li>
+          <li>私有化部署</li>
+          <li>模型微调定制</li>
+          <li>专属技术支持</li>
+          <li>SLA 保障</li>
+        </ul>
+        <a href="contact.html"><button class="tier-btn">联系销售</button></a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="footer">
+  <p style="margin-bottom:16px">
+    <a href="about.html" style="color:var(--text2);margin:0 12px">关于我们</a>
+    <a href="community.html" style="color:var(--text2);margin:0 12px">创作者社区</a>
+    <a href="api.html" style="color:var(--text2);margin:0 12px">API 文档</a>
+    <a href="terms.html" style="color:var(--text2);margin:0 12px">服务条款</a>
+    <a href="privacy.html" style="color:var(--text2);margin:0 12px">隐私政策</a>
+  </p>
+  <p>SonicForge AI — 让每一段旋律都触手可及 &nbsp;|&nbsp; © 2026 SonicForge Technologies</p>
+</footer>
+<script>
+// === Hero Background Canvas ===
+(function(){
+  const canvas = document.getElementById('heroCanvas');
+  const ctx = canvas.getContext('2d');
+  let w, h, particles = [];
+  function resize(){ w = canvas.width = window.innerWidth; h = canvas.height = window.innerHeight; }
+  window.addEventListener('resize', resize); resize();
+  class Particle {
+    constructor(){ this.reset(); }
+    reset(){
+      this.x = Math.random()*w; this.y = Math.random()*h;
+      this.vx = (Math.random()-.5)*.3; this.vy = (Math.random()-.5)*.3;
+      this.r = Math.random()*2+.5;
+      this.alpha = Math.random()*.3+.05;
+      const colors = ['0,240,255','255,45,138','255,179,0'];
+      this.color = colors[Math.floor(Math.random()*3)];
+    }
+    update(){ this.x+=this.vx; this.y+=this.vy; if(this.x<0||this.x>w||this.y<0||this.y>h) this.reset(); }
+    draw(){
+      ctx.beginPath(); ctx.arc(this.x,this.y,this.r,0,Math.PI*2);
+      ctx.fillStyle=`rgba(${this.color},${this.alpha})`; ctx.fill();
+    }
+  }
+  for(let i=0;i<80;i++) particles.push(new Particle());
+  function loop(){
+    ctx.clearRect(0,0,w,h);
+    particles.forEach(p=>{p.update();p.draw()});
+    // Draw connections
+    for(let i=0;i<particles.length;i++){
+      for(let j=i+1;j<particles.length;j++){
+        const dx=particles[i].x-particles[j].x, dy=particles[i].y-particles[j].y;
+        const dist=Math.sqrt(dx*dx+dy*dy);
+        if(dist<120){
+          ctx.beginPath(); ctx.moveTo(particles[i].x,particles[i].y);
+          ctx.lineTo(particles[j].x,particles[j].y);
+          ctx.strokeStyle=`rgba(0,240,255,${.06*(1-dist/120)})`;
+          ctx.lineWidth=.5; ctx.stroke();
+        }
+      }
+    }
+    requestAnimationFrame(loop);
+  }
+  loop();
+})();
+
+// === Waveform Bars ===
+(function(){
+  const container = document.getElementById('waveform');
+  for(let i=0;i<60;i++){
+    const bar = document.createElement('div');
+    bar.className='bar';
+    const h1 = Math.random()*20+8;
+    const h2 = Math.random()*80+20;
+    const dur = (Math.random()*1.5+.5).toFixed(2);
+    bar.style.cssText=`--h1:${h1}px;--h2:${h2}px;--dur:${dur}s;height:${h1}px;animation-delay:${(i*0.05).toFixed(2)}s`;
+    container.appendChild(bar);
+  }
+})();
+
+// === Mini Waveforms on Genre Cards ===
+(function(){
+  const genres = ['electronic','jazz','classical','hiphop','lofi','cinematic','pop','ambient'];
+  const colors = {
+    electronic:'#00f0ff',jazz:'#ffb300',classical:'#a8ff00',hiphop:'#ff2d8a',
+    lofi:'#a078ff',cinematic:'#ff6432',pop:'#ff50b4',ambient:'#00c8b4'
+  };
+  genres.forEach(g=>{
+    const container = document.getElementById('mw-'+g);
+    if(!container) return;
+    for(let i=0;i<20;i++){
+      const bar = document.createElement('div');
+      bar.className='mw-bar';
+      const h = Math.random()*24+6;
+      const d = (Math.random()*1.2+.4).toFixed(2);
+      bar.style.cssText=`height:${h}px;--d:${d}s;animation-delay:${(i*0.06).toFixed(2)}s;background:${colors[g]};animation:wave-bar ${d}s ease-in-out ${(i*0.06).toFixed(2)}s infinite alternate`;
+      container.appendChild(bar);
+    }
+  });
+})();
+
+// === Scroll Reveal ===
+(function(){
+  const observer = new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{
+      if(e.isIntersecting){
+        e.target.style.opacity='1';
+        e.target.style.transform='translateY(0)';
+      }
+    });
+  },{threshold:.1});
+  document.querySelectorAll('.genre-card,.money-card,.feature-item,.price-card').forEach(el=>{
+    el.style.opacity='0';
+    el.style.transform='translateY(24px)';
+    el.style.transition='opacity .6s ease, transform .6s ease';
+    observer.observe(el);
+  });
+})();
+
+// === Genre Card Hover Effect ===
+document.querySelectorAll('.genre-card').forEach(card=>{
+  card.addEventListener('mouseenter',()=>{
+    card.style.transition='transform .35s, border-color .35s';
+  });
+});
+
+// === Auth State Check ===
+async function checkAuthState() {
+  const user = await Auth.getCurrentUser();
+  const loginBtn = document.getElementById('loginBtn');
+  const navUser = document.getElementById('navUser');
+  const navUserEmail = document.getElementById('navUserEmail');
+  
+  if (user) {
+    // User is logged in
+    const profile = await Auth.getProfile(user.id);
+    if (loginBtn) loginBtn.style.display = 'none';
+    if (navUser) navUser.style.display = 'flex';
+    if (navUserEmail) navUserEmail.textContent = user.email;
+  } else {
+    // User is not logged in
+    if (loginBtn) loginBtn.style.display = 'block';
+    if (navUser) navUser.style.display = 'none';
+  }
+}
+
+function logoutFromIndex() {
+  Auth.signOut().then(() => {
+    location.reload();
+  });
+}
+
+// Check auth state on page load
+checkAuthState();
+</script>
+</body>
+</html>

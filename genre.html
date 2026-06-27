@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SonicForge AI — 风格详情</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Noto+Sans+SC:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#08080c;--bg2:#0e0e14;--bg3:#16161f;--text:#e8e6f0;--text2:#9896a8;--text3:#5c5a6e;--cyan:#00f0ff;--magenta:#ff2d8a;--amber:#ffb300;--lime:#a8ff00;--radius:16px;--radius-sm:10px;--font-display:'Outfit','Noto Sans SC',sans-serif;--font-body:'Noto Sans SC','Outfit',sans-serif;--font-mono:'JetBrains Mono',monospace}
+html{scroll-behavior:smooth;font-size:16px}
+body{background:var(--bg);color:var(--text);font-family:var(--font-body);overflow-x:hidden;line-height:1.6}
+::selection{background:var(--cyan);color:var(--bg)}
+a{color:inherit;text-decoration:none}
+
+.nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:16px 48px;display:flex;align-items:center;justify-content:space-between;backdrop-filter:blur(20px);background:rgba(8,8,12,.85);border-bottom:1px solid rgba(255,255,255,.04)}
+.nav-logo{font-family:var(--font-display);font-weight:800;font-size:1.3rem;display:flex;align-items:center;gap:10px;cursor:pointer}
+.nav-logo .dot{width:8px;height:8px;border-radius:50%;background:var(--cyan);box-shadow:0 0 10px var(--cyan)}
+.nav-back{padding:8px 20px;border-radius:100px;border:1px solid rgba(255,255,255,.12);background:transparent;color:var(--text2);font-size:.85rem;cursor:pointer;transition:all .2s;font-family:var(--font-body)}
+.nav-back:hover{border-color:var(--text);color:var(--text)}
+
+.genre-page{padding:100px 48px 60px;max-width:1000px;margin:0 auto}
+.genre-hero{display:flex;align-items:center;gap:24px;margin-bottom:48px}
+.genre-icon-lg{width:80px;height:80px;border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:2.5rem}
+.genre-hero h1{font-family:var(--font-display);font-size:2.5rem;font-weight:800;letter-spacing:-.02em}
+.genre-hero .sub{color:var(--text2);font-size:1rem;margin-top:4px}
+
+.genre-desc{background:var(--bg2);border:1px solid rgba(255,255,255,.05);border-radius:var(--radius);padding:32px;margin-bottom:32px}
+.genre-desc h2{font-family:var(--font-display);font-size:1.3rem;font-weight:700;margin-bottom:12px}
+.genre-desc p{color:var(--text2);font-size:.95rem;line-height:1.8}
+
+/* Sub-genres */
+.sub-genres{margin-bottom:32px}
+.sub-genres h2{font-family:var(--font-display);font-size:1.3rem;font-weight:700;margin-bottom:16px}
+.sub-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+.sub-card{padding:20px;border-radius:var(--radius-sm);background:var(--bg2);border:1px solid rgba(255,255,255,.05);cursor:pointer;transition:all .2s;text-align:center}
+.sub-card:hover{border-color:rgba(255,255,255,.15);transform:translateY(-2px)}
+.sub-card .name{font-weight:600;font-size:.95rem;margin-bottom:4px}
+.sub-card .bpm{font-family:var(--font-mono);font-size:.75rem;color:var(--text3)}
+
+/* Audio samples */
+.samples{margin-bottom:32px}
+.samples h2{font-family:var(--font-display);font-size:1.3rem;font-weight:700;margin-bottom:16px}
+.sample-list{display:flex;flex-direction:column;gap:12px}
+.sample-item{display:flex;align-items:center;gap:16px;padding:16px 20px;border-radius:var(--radius-sm);background:var(--bg2);border:1px solid rgba(255,255,255,.05);cursor:pointer;transition:all .2s}
+.sample-item:hover{border-color:rgba(255,255,255,.1)}
+.sample-play{width:40px;height:40px;border-radius:50%;border:1px solid rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s}
+.sample-item:hover .sample-play{border-color:var(--cyan);background:rgba(0,240,255,.08)}
+.sample-play svg{width:14px;height:14px;fill:var(--text2)}
+.sample-item:hover .sample-play svg{fill:var(--cyan)}
+.sample-info{flex:1}
+.sample-title{font-weight:500;font-size:.9rem}
+.sample-meta{font-size:.75rem;color:var(--text3);margin-top:2px}
+.sample-dur{font-family:var(--font-mono);font-size:.8rem;color:var(--text3)}
+
+/* Characteristics */
+.chars{margin-bottom:32px}
+.chars h2{font-family:var(--font-display);font-size:1.3rem;font-weight:700;margin-bottom:16px}
+.char-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px}
+.char-item{padding:16px;border-radius:var(--radius-sm);background:var(--bg2);border:1px solid rgba(255,255,255,.05);text-align:center}
+.char-item .val{font-family:var(--font-display);font-size:1.5rem;font-weight:700;margin-bottom:4px}
+.char-item .label{font-size:.75rem;color:var(--text3);text-transform:uppercase;letter-spacing:.05em}
+
+/* CTA */
+.genre-cta{text-align:center;padding:40px;background:var(--bg2);border-radius:var(--radius);border:1px solid rgba(255,255,255,.05)}
+.genre-cta h3{font-family:var(--font-display);font-size:1.4rem;font-weight:700;margin-bottom:8px}
+.genre-cta p{color:var(--text2);font-size:.9rem;margin-bottom:20px}
+.genre-cta .btn{padding:14px 36px;border-radius:100px;background:linear-gradient(135deg,var(--cyan),#00b4d8);color:var(--bg);font-weight:700;font-size:.95rem;border:none;cursor:pointer;transition:all .3s;font-family:var(--font-body)}
+.genre-cta .btn:hover{box-shadow:0 8px 30px rgba(0,240,255,.3);transform:translateY(-2px)}
+
+@media(max-width:700px){
+  .genre-page{padding:80px 20px 40px}
+  .genre-hero{flex-direction:column;text-align:center}
+  .genre-hero h1{font-size:1.8rem}
+  .nav{padding:14px 20px}
+}
+</style>
+</head>
+<body>
+<nav class="nav">
+  <div class="nav-logo" onclick="location.href='index.html'"><span class="dot"></span>SonicForge AI</div>
+  <a href="index.html"><button class="nav-back">← 返回首页</button></a>
+</nav>
+
+<div class="genre-page" id="genrePage">
+  <!-- Dynamic content -->
+</div>
+
+<footer style="padding:40px 48px;border-top:1px solid rgba(255,255,255,.04);text-align:center;margin-top:40px">
+  <p style="font-size:.8rem;color:var(--text3);margin-bottom:12px">
+    <a href="index.html" style="color:var(--text2);margin:0 12px">首页</a>
+    <a href="studio.html" style="color:var(--text2);margin:0 12px">创作工作室</a>
+    <a href="demo.html" style="color:var(--text2);margin:0 12px">产品演示</a>
+    <a href="community.html" style="color:var(--text2);margin:0 12px">创作者社区</a>
+    <a href="about.html" style="color:var(--text2);margin:0 12px">关于我们</a>
+  </p>
+  <p style="font-size:.75rem;color:var(--text3)">© 2026 SonicForge Technologies</p>
+</footer>
+
+<script>
+const genreData = {
+  electronic: {
+    icon: '⚡', name: 'Electronic', color: '#00f0ff',
+    sub: '电子音乐',
+    desc: '电子音乐是 SonicForge AI 最擅长的风格之一。我们的模型深度学习了从 70 年代 Kraftwerk 到现代 Skrillex 的海量作品，能够精准还原各类电子音乐的合成器音色、节拍编排和声音设计。无论是深夜俱乐部的 Techno，还是阳光下的 Tropical House，都能完美呈现。',
+    subGenres: [
+      { name: 'Deep House', bpm: '118-125 BPM' },
+      { name: 'Techno', bpm: '125-140 BPM' },
+      { name: 'Drum & Bass', bpm: '160-180 BPM' },
+      { name: 'Trance', bpm: '128-140 BPM' },
+      { name: 'Dubstep', bpm: '138-142 BPM' },
+      { name: 'Synthwave', bpm: '90-110 BPM' }
+    ],
+    samples: [
+      { title: 'Midnight Pulse', meta: 'Deep House · 122 BPM · Am', dur: '2:34' },
+      { title: 'Neon Circuit', meta: 'Techno · 132 BPM · Cm', dur: '3:12' },
+      { title: 'Bass Quake', meta: 'Dubstep · 140 BPM · Fm', dur: '2:48' }
+    ],
+    chars: [
+      { val: '60-180', label: 'BPM 范围' },
+      { val: '小调', label: '常用调式' },
+      { val: '合成器', label: '核心乐器' },
+      { val: '4/4', label: '典型节拍' }
+    ]
+  },
+  jazz: {
+    icon: '🎷', name: 'Jazz', color: '#ffb300',
+    sub: '爵士音乐',
+    desc: '爵士乐是即兴与规则的完美平衡。SonicForge AI 掌握了从 Swing 到 Fusion 的演进脉络，能够生成具有真实感的即兴独奏、复杂的和弦替代进行和富有律动感的 Swing 节奏。每一次生成都是独一无二的音乐对话。',
+    subGenres: [
+      { name: 'Bebop', bpm: '140-200 BPM' },
+      { name: 'Swing', bpm: '120-170 BPM' },
+      { name: 'Cool Jazz', bpm: '80-130 BPM' },
+      { name: 'Fusion', bpm: '100-160 BPM' },
+      { name: 'Bossa Nova', bpm: '110-140 BPM' },
+      { name: 'Free Jazz', bpm: '自由速度' }
+    ],
+    samples: [
+      { title: 'Blue Note Walk', meta: 'Bebop · 160 BPM · Bbm', dur: '3:05' },
+      { title: 'Autumn in Paris', meta: 'Cool Jazz · 110 BPM · Eb', dur: '4:22' },
+      { title: 'Fusion Journey', meta: 'Fusion · 130 BPM · Dm', dur: '3:48' }
+    ],
+    chars: [
+      { val: '80-200', label: 'BPM 范围' },
+      { val: '七和弦', label: '和声特征' },
+      { val: 'Swing', label: '节奏特征' },
+      { val: '即兴', label: '核心元素' }
+    ]
+  },
+  classical: {
+    icon: '🎻', name: 'Classical', color: '#a8ff00',
+    sub: '古典音乐',
+    desc: '从巴赫的赋格到马勒的交响曲，SonicForge AI 深入理解了数百年古典音乐的创作法则。我们的模型能够生成符合严格对位法规则的复调音乐，也能创作气势恢宏的管弦乐作品，每一个声部都经过精心编排。',
+    subGenres: [
+      { name: '巴洛克', bpm: '60-120 BPM' },
+      { name: '古典主义', bpm: '70-140 BPM' },
+      { name: '浪漫主义', bpm: '50-160 BPM' },
+      { name: '印象主义', bpm: '60-110 BPM' },
+      { name: '现代古典', bpm: '自由速度' },
+      { name: '新古典', bpm: '80-140 BPM' }
+    ],
+    samples: [
+      { title: 'Spring Sonata', meta: '浪漫主义 · 92 BPM · D Major', dur: '5:30' },
+      { title: 'Fugue in C', meta: '巴洛克 · 100 BPM · C Minor', dur: '3:45' },
+      { title: 'Orchestral Dawn', meta: '印象主义 · 72 BPM · F# Major', dur: '4:15' }
+    ],
+    chars: [
+      { val: '50-160', label: 'BPM 范围' },
+      { val: '大小调', label: '调式体系' },
+      { val: '管弦乐', label: '编制形式' },
+      { val: '对位法', label: '作曲技法' }
+    ]
+  },
+  hiphop: {
+    icon: '🎤', name: 'Hip-Hop', color: '#ff2d8a',
+    sub: '嘻哈音乐',
+    desc: '从 Boom Bap 的黄金年代到 Trap 的现代街头，SonicForge AI 精准捕捉了 Hip-Hop 的灵魂——沉重的 808 低音、锋利的 Hi-hat 滚奏和富有律动感的采样拼贴。每一拍都带着街头的真实感。',
+    subGenres: [
+      { name: 'Boom Bap', bpm: '85-100 BPM' },
+      { name: 'Trap', bpm: '130-170 BPM' },
+      { name: 'Drill', bpm: '130-145 BPM' },
+      { name: 'Lo-fi Hip-Hop', bpm: '70-90 BPM' },
+      { name: 'Cloud Rap', bpm: '120-150 BPM' },
+      { name: 'Old School', bpm: '95-110 BPM' }
+    ],
+    samples: [
+      { title: 'Block Party', meta: 'Boom Bap · 92 BPM · Gm', dur: '2:55' },
+      { title: 'Dark Trap', meta: 'Trap · 145 BPM · Cm', dur: '3:20' },
+      { title: 'Drill Season', meta: 'Drill · 140 BPM · Fm', dur: '2:40' }
+    ],
+    chars: [
+      { val: '70-170', label: 'BPM 范围' },
+      { val: '小调', label: '常用调式' },
+      { val: '808', label: '核心低音' },
+      { val: '采样', label: '制作手法' }
+    ]
+  },
+  lofi: {
+    icon: '🌙', name: 'Lo-Fi', color: '#a078ff',
+    sub: '低保真音乐',
+    desc: 'Lo-Fi 是一种拥抱不完美的艺术。SonicForge AI 能够模拟黑胶唱片的温暖噪音、磁带的轻微失真和老式采样器的质感，结合慵懒的节拍与柔和的钢琴/吉他旋律，创造出完美的学习、工作或放松背景音乐。',
+    subGenres: [
+      { name: 'Lo-Fi Hip-Hop', bpm: '70-90 BPM' },
+      { name: 'Chillhop', bpm: '80-100 BPM' },
+      { name: 'Jazzhop', bpm: '75-95 BPM' },
+      { name: 'Vinyl', bpm: '60-85 BPM' },
+      { name: 'Downtempo', bpm: '80-110 BPM' },
+      { name: 'Ambient Lo-Fi', bpm: '50-75 BPM' }
+    ],
+    samples: [
+      { title: 'Rainy Window', meta: 'Lo-Fi · 78 BPM · Fm', dur: '3:15' },
+      { title: 'Coffee Shop', meta: 'Jazzhop · 85 BPM · Eb', dur: '2:50' },
+      { title: 'Midnight Study', meta: 'Chillhop · 82 BPM · Am', dur: '4:00' }
+    ],
+    chars: [
+      { val: '50-100', label: 'BPM 范围' },
+      { val: '小调', label: '常用调式' },
+      { val: '钢琴', label: '核心乐器' },
+      { val: '噪音', label: '质感特征' }
+    ]
+  },
+  cinematic: {
+    icon: '🎬', name: 'Cinematic', color: '#ff6432',
+    sub: '影视配乐',
+    desc: '影视配乐需要在几秒钟内唤起强烈的情感。SonicForge AI 融合史诗级管弦乐编排与现代电子音效设计，能够为任何画面创造出匹配的情感氛围——从紧张悬疑到壮阔史诗，从温情脉脉到科幻未来。',
+    subGenres: [
+      { name: '史诗', bpm: '60-120 BPM' },
+      { name: '悬疑', bpm: '50-90 BPM' },
+      { name: '科幻', bpm: '70-130 BPM' },
+      { name: '温情', bpm: '60-100 BPM' },
+      { name: '动作', bpm: '110-160 BPM' },
+      { name: '纪录片', bpm: '70-110 BPM' }
+    ],
+    samples: [
+      { title: 'Epic Dawn', meta: '史诗 · 90 BPM · Dm', dur: '3:40' },
+      { title: 'Shadow Protocol', meta: '悬疑 · 72 BPM · Cm', dur: '2:55' },
+      { title: 'Beyond Stars', meta: '科幻 · 100 BPM · Fm', dur: '4:10' }
+    ],
+    chars: [
+      { val: '50-160', label: 'BPM 范围' },
+      { val: '混合', label: '调式特征' },
+      { val: '管弦乐', label: '核心编制' },
+      { val: '动态', label: '编排特征' }
+    ]
+  },
+  pop: {
+    icon: '🎵', name: 'Pop', color: '#ff50b4',
+    sub: '流行音乐',
+    desc: '流行音乐的核心是令人难忘的旋律和精致的制作。SonicForge AI 分析了数十年的流行金曲，掌握了 Hook 写作、歌曲结构（Verse-Chorus-Bridge）和现代流行制作的秘密，能够创作出朗朗上口且具有商业潜力的作品。',
+    subGenres: [
+      { name: 'Synth Pop', bpm: '100-130 BPM' },
+      { name: 'Dance Pop', bpm: '115-130 BPM' },
+      { name: 'Ballad', bpm: '60-90 BPM' },
+      { name: 'Indie Pop', bpm: '90-130 BPM' },
+      { name: 'R&B Pop', bpm: '80-110 BPM' },
+      { name: 'Electro Pop', bpm: '120-140 BPM' }
+    ],
+    samples: [
+      { title: 'Summer Glow', meta: 'Dance Pop · 122 BPM · G Major', dur: '3:10' },
+      { title: 'Heartbeat', meta: 'Ballad · 76 BPM · C Major', dur: '3:45' },
+      { title: 'Neon Dreams', meta: 'Synth Pop · 118 BPM · Am', dur: '2:55' }
+    ],
+    chars: [
+      { val: '60-140', label: 'BPM 范围' },
+      { val: '大小调', label: '调式选择' },
+      { val: '人声', label: '核心元素' },
+      { val: 'Hook', label: '创作重点' }
+    ]
+  },
+  ambient: {
+    icon: '🌊', name: 'Ambient', color: '#00c8b4',
+    sub: '氛围音乐',
+    desc: '氛围音乐是关于空间和纹理的艺术。SonicForge AI 擅长创造沉浸式的声景——从深空的漂移感到森林的宁静，从冥想空间的平和到未来世界的科幻感。每一段音乐都是一个独特的声音宇宙，适合放松、冥想或作为环境背景音。',
+    subGenres: [
+      { name: 'Drone', bpm: '无固定节拍' },
+      { name: 'Soundscape', bpm: '无固定节拍' },
+      { name: 'Meditation', bpm: '40-70 BPM' },
+      { name: 'Space', bpm: '无固定节拍' },
+      { name: 'Dark Ambient', bpm: '无固定节拍' },
+      { name: 'Ambient Dub', bpm: '70-100 BPM' }
+    ],
+    samples: [
+      { title: 'Deep Space', meta: 'Space · 自由速度 · D', dur: '5:00' },
+      { title: 'Forest Mist', meta: 'Soundscape · 自由速度 · G', dur: '4:30' },
+      { title: 'Inner Peace', meta: 'Meditation · 60 BPM · C', dur: '6:15' }
+    ],
+    chars: [
+      { val: '自由', label: 'BPM 特征' },
+      { val: '调性模糊', label: '和声特征' },
+      { val: '纹理', label: '核心元素' },
+      { val: '空间感', label: '混响特征' }
+    ]
+  }
+};
+
+// Get genre from URL
+const params = new URLSearchParams(window.location.search);
+const genreKey = params.get('genre') || 'electronic';
+const data = genreData[genreKey] || genreData.electronic;
+
+// Render page
+const page = document.getElementById('genrePage');
+page.innerHTML = `
+  <div class="genre-hero">
+    <div class="genre-icon-lg" style="background:${data.color}15;color:${data.color}">${data.icon}</div>
+    <div>
+      <h1>${data.name}</h1>
+      <div class="sub">${data.sub}</div>
+    </div>
+  </div>
+
+  <div class="genre-desc">
+    <h2>风格介绍</h2>
+    <p>${data.desc}</p>
+  </div>
+
+  <div class="sub-genres">
+    <h2>子风格</h2>
+    <div class="sub-grid">
+      ${data.subGenres.map(sg => `
+        <div class="sub-card">
+          <div class="name">${sg.name}</div>
+          <div class="bpm">${sg.bpm}</div>
+        </div>
+      `).join('')}
+    </div>
+  </div>
+
+  <div class="samples">
+    <h2>AI 生成示例</h2>
+    <div class="sample-list">
+      ${data.samples.map(s => `
+        <div class="sample-item" onclick="playSample(this)">
+          <div class="sample-play"><svg viewBox="0 0 24 24"><polygon points="8,5 19,12 8,19"/></svg></div>
+          <div class="sample-info">
+            <div class="sample-title">${s.title}</div>
+            <div class="sample-meta">${s.meta}</div>
+          </div>
+          <div class="sample-dur">${s.dur}</div>
+        </div>
+      `).join('')}
+    </div>
+  </div>
+
+  <div class="chars">
+    <h2>风格特征</h2>
+    <div class="char-grid">
+      ${data.chars.map(c => `
+        <div class="char-item">
+          <div class="val" style="color:${data.color}">${c.val}</div>
+          <div class="label">${c.label}</div>
+        </div>
+      `).join('')}
+    </div>
+  </div>
+
+  <div class="genre-cta">
+    <h3>用 AI 创作 ${data.name} 音乐</h3>
+    <p>进入工作室，选择 ${data.name} 风格，开始你的创作之旅。</p>
+    <button class="btn" onclick="location.href='studio.html?genre=${genreKey}'">进入工作室</button>
+  </div>
+`;
+
+// Audio engine for sample playback
+let audioCtx = null;
+let currentSource = null;
+let currentEl = null;
+let isPlaying = false;
+
+function getCtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  return audioCtx;
+}
+
+const GENRE_AUDIO = {
+  electronic: { root: 110, wave: 'sawtooth', scale: [0,3,5,7,10,12], bpm: 128, attack: 0.01, release: 0.08 },
+  jazz:       { root: 220, wave: 'sine',     scale: [0,2,4,7,9,11], bpm: 140, attack: 0.04, release: 0.25 },
+  classical:  { root: 261, wave: 'triangle', scale: [0,2,4,5,7,9,11], bpm: 90, attack: 0.08, release: 0.4 },
+  hiphop:     { root: 55,  wave: 'square',   scale: [0,3,5,7,10,12], bpm: 90, attack: 0.005, release: 0.04 },
+  lofi:       { root: 196, wave: 'sine',     scale: [0,2,3,5,7,9], bpm: 78, attack: 0.06, release: 0.35 },
+  cinematic:  { root: 73,  wave: 'sawtooth', scale: [0,2,4,7,12], bpm: 80, attack: 0.25, release: 0.6 },
+  pop:        { root: 261, wave: 'square',   scale: [0,2,4,5,7,9,12], bpm: 120, attack: 0.01, release: 0.12 },
+  ambient:    { root: 130, wave: 'sine',     scale: [0,5,7,12,17], bpm: 60, attack: 0.4, release: 1.2 }
+};
+
+function generateSample(genre, durSec) {
+  const ctx = getCtx();
+  const sr = ctx.sampleRate;
+  const len = Math.floor(durSec * sr);
+  const buf = ctx.createBuffer(2, len, sr);
+  const L = buf.getChannelData(0);
+  const R = buf.getChannelData(1);
+  const cfg = GENRE_AUDIO[genre] || GENRE_AUDIO.electronic;
+  const beatDur = 60 / cfg.bpm;
+  const rootMidi = Math.round(12 * Math.log2(cfg.root / 440)) + 69;
+  let seed = genre.charCodeAt(0) * 1000 + Date.now() % 10000;
+  function rand() { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; }
+
+  // Melody
+  let t = 0;
+  while (t < durSec) {
+    const noteIdx = cfg.scale[Math.floor(rand() * cfg.scale.length)];
+    const freq = 440 * Math.pow(2, (rootMidi + noteIdx - 69) / 12);
+    const noteDur = beatDur * (0.5 + rand() * 0.5);
+    const start = Math.floor(t * sr);
+    const end = Math.min(len, Math.floor((t + noteDur) * sr));
+    for (let i = 0; i < end - start; i++) {
+      const env = Math.min(1, i / (sr * cfg.attack)) * Math.min(1, (end - start - i) / (sr * cfg.release));
+      const phase = (freq * (start + i)) / sr;
+      let s = cfg.wave === 'sine' ? Math.sin(2*Math.PI*phase) :
+              cfg.wave === 'sawtooth' ? 2*(phase%1)-1 :
+              cfg.wave === 'square' ? ((phase%1)<0.5?1:-1) :
+              4*Math.abs((phase%1)-0.5)-1;
+      s += 0.2 * Math.sin(2*Math.PI*phase*2);
+      const val = s * env * 0.12;
+      L[start+i] += val; R[start+i] += val * 0.9;
+    }
+    t += noteDur;
+  }
+  // Pad
+  t = 0;
+  while (t < durSec) {
+    const chordNotes = [0, 4, 7].map(i => cfg.scale[Math.min(i, cfg.scale.length-1)]);
+    const start = Math.floor(t * sr);
+    const end = Math.min(len, Math.floor((t + beatDur * 4) * sr));
+    for (let n = 0; n < chordNotes.length; n++) {
+      const freq = 440 * Math.pow(2, (rootMidi + chordNotes[n] - 69) / 12);
+      for (let i = 0; i < end - start; i++) {
+        const env = Math.min(1, i/(sr*0.3)) * Math.min(1, (end-start-i)/(sr*0.3));
+        const s = Math.sin(2*Math.PI*freq*(start+i)/sr);
+        L[start+i] += s * env * 0.04; R[start+i] += s * env * 0.04;
+      }
+    }
+    t += beatDur * 4;
+  }
+  // Master
+  for (let i = 0; i < len; i++) {
+    L[i] = Math.tanh(L[i] * 2) * 0.7;
+    R[i] = Math.tanh(R[i] * 2) * 0.7;
+  }
+  return buf;
+}
+
+function playSample(el) {
+  // Stop current playback
+  if (currentSource) {
+    try { currentSource.stop(); } catch(e) {}
+    currentSource.disconnect();
+    currentSource = null;
+  }
+  if (currentEl) {
+    currentEl.style.borderColor = '';
+    currentEl.querySelector('.sample-play svg').innerHTML = '<polygon points="8,5 19,12 8,19"/>';
+  }
+  // If clicking same element, just stop
+  if (currentEl === el) {
+    currentEl = null;
+    isPlaying = false;
+    return;
+  }
+  // Generate and play
+  const buf = generateSample(genreKey, 5);
+  const ctx = getCtx();
+  currentSource = ctx.createBufferSource();
+  currentSource.buffer = buf;
+  currentSource.connect(ctx.destination);
+  currentSource.start();
+  currentEl = el;
+  isPlaying = true;
+
+  // Visual feedback
+  el.style.borderColor = data.color;
+  el.querySelector('.sample-play svg').innerHTML = '<rect x="6" y="5" width="4" height="14"/><rect x="14" y="5" width="4" height="14"/>';
+  currentSource.onended = () => {
+    el.style.borderColor = '';
+    el.querySelector('.sample-play svg').innerHTML = '<polygon points="8,5 19,12 8,19"/>';
+    currentSource = null;
+    currentEl = null;
+    isPlaying = false;
+  };
+}
+</script>
+</body>
+</html>

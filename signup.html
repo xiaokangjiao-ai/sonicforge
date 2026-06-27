@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SonicForge AI — 订阅方案</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Noto+Sans+SC:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-client.js"></script>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#08080c;--bg2:#0e0e14;--bg3:#16161f;--text:#e8e6f0;--text2:#9896a8;--text3:#5c5a6e;--cyan:#00f0ff;--magenta:#ff2d8a;--amber:#ffb300;--lime:#a8ff00;--radius:16px;--radius-sm:10px;--font-display:'Outfit','Noto Sans SC',sans-serif;--font-body:'Noto Sans SC','Outfit',sans-serif;--font-mono:'JetBrains Mono',monospace}
+html{scroll-behavior:smooth;font-size:16px}
+body{background:var(--bg);color:var(--text);font-family:var(--font-body);overflow-x:hidden;line-height:1.6}
+::selection{background:var(--cyan);color:var(--bg)}
+a{color:inherit;text-decoration:none}
+
+.nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:16px 48px;display:flex;align-items:center;justify-content:space-between;backdrop-filter:blur(20px);background:rgba(8,8,12,.85);border-bottom:1px solid rgba(255,255,255,.04)}
+.nav-logo{font-family:var(--font-display);font-weight:800;font-size:1.3rem;display:flex;align-items:center;gap:10px;cursor:pointer}
+.nav-logo .dot{width:8px;height:8px;border-radius:50%;background:var(--cyan);box-shadow:0 0 10px var(--cyan)}
+.nav-back{padding:8px 20px;border-radius:100px;border:1px solid rgba(255,255,255,.12);background:transparent;color:var(--text2);font-size:.85rem;cursor:pointer;transition:all .2s;font-family:var(--font-body)}
+.nav-back:hover{border-color:var(--text);color:var(--text)}
+
+.signup{padding:100px 48px 60px;max-width:640px;margin:0 auto}
+.signup-header{text-align:center;margin-bottom:48px}
+.signup-header h1{font-family:var(--font-display);font-size:2rem;font-weight:800;letter-spacing:-.02em;margin-bottom:8px}
+.signup-header p{color:var(--text2);font-size:.95rem}
+
+.selected-plan{background:var(--bg2);border:1px solid rgba(0,240,255,.2);border-radius:var(--radius);padding:24px;margin-bottom:32px;display:flex;align-items:center;justify-content:space-between}
+.selected-plan .plan-info h3{font-family:var(--font-display);font-size:1.2rem;font-weight:700}
+.selected-plan .plan-info p{color:var(--text2);font-size:.85rem;margin-top:4px}
+.selected-plan .plan-price{font-family:var(--font-display);font-size:1.8rem;font-weight:800;color:var(--cyan)}
+.selected-plan .plan-price span{font-size:.8rem;font-weight:400;color:var(--text3)}
+
+.billing-toggle{display:flex;gap:0;border-radius:8px;overflow:hidden;border:1px solid rgba(255,255,255,.08);margin-bottom:32px}
+.billing-opt{flex:1;padding:12px;text-align:center;cursor:pointer;font-size:.85rem;font-weight:500;transition:all .2s;background:transparent;border:none;color:var(--text2);font-family:var(--font-body)}
+.billing-opt.active{background:rgba(0,240,255,.08);color:var(--cyan)}
+.billing-opt .save{font-size:.7rem;color:var(--lime);margin-left:4px}
+
+/* Payment method selection */
+.pay-section{margin-bottom:24px}
+.pay-section h3{font-family:var(--font-display);font-size:1rem;font-weight:600;margin-bottom:16px;color:var(--text2)}
+.pay-methods{display:flex;flex-direction:column;gap:10px;margin-bottom:24px}
+.pay-method{display:flex;align-items:center;gap:14px;padding:16px 20px;border-radius:var(--radius-sm);border:1px solid rgba(255,255,255,.08);background:var(--bg2);cursor:pointer;transition:all .25s}
+.pay-method:hover{border-color:rgba(255,255,255,.15)}
+.pay-method.active{border-color:var(--cyan);background:rgba(0,240,255,.04)}
+.pay-method .pay-icon{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0}
+.pay-method .pay-name{font-weight:600;font-size:.95rem}
+.pay-method .pay-desc{font-size:.75rem;color:var(--text3);margin-top:2px}
+.pay-method .pay-radio{width:20px;height:20px;border-radius:50%;border:2px solid var(--bg3);margin-left:auto;flex-shrink:0;transition:all .2s;position:relative}
+.pay-method.active .pay-radio{border-color:var(--cyan)}
+.pay-method.active .pay-radio::after{content:'';position:absolute;inset:3px;border-radius:50%;background:var(--cyan)}
+
+.pay-icon-paypal{background:rgba(0,112,201,.15);color:#0070c9}
+.pay-icon-alipay{background:rgba(0,160,255,.12);color:#00a0ff}
+.pay-icon-wechat{background:rgba(7,193,96,.12);color:#07c160}
+
+/* Payment panels */
+.pay-panel{display:none;background:var(--bg2);border:1px solid rgba(255,255,255,.05);border-radius:var(--radius);padding:28px;margin-bottom:24px}
+.pay-panel.active{display:block}
+.pay-panel h4{font-family:var(--font-display);font-size:1rem;font-weight:600;margin-bottom:12px}
+.pay-panel p{color:var(--text2);font-size:.85rem;line-height:1.7;margin-bottom:16px}
+
+.qr-container{text-align:center;padding:20px}
+.qr-box{width:200px;height:200px;margin:0 auto 16px;background:white;border-radius:12px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.qr-box img{width:180px;height:180px;object-fit:contain}
+.qr-placeholder{width:180px;height:180px;background:repeating-linear-gradient(45deg,#f0f0f0,#f0f0f0 4px,#e0e0e0 4px,#e0e0e0 8px);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:.8rem;color:#999}
+.qr-amount{font-family:var(--font-display);font-size:1.8rem;font-weight:800;color:var(--cyan);margin-bottom:4px}
+.qr-note{font-size:.75rem;color:var(--text3)}
+
+.form-group{margin-bottom:16px}
+.form-group label{display:block;font-size:.85rem;color:var(--text2);margin-bottom:6px}
+.form-group input,.form-group select{width:100%;padding:14px 16px;border-radius:8px;border:1px solid rgba(255,255,255,.08);background:var(--bg);color:var(--text);font-size:.9rem;font-family:var(--font-body);outline:none;transition:border-color .2s}
+.form-group input:focus,.form-group select:focus{border-color:var(--cyan)}
+.form-group input::placeholder{color:var(--text3)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+.summary{background:var(--bg2);border-radius:var(--radius);padding:24px;margin-bottom:24px}
+.summary-row{display:flex;justify-content:space-between;padding:8px 0;font-size:.9rem;color:var(--text2)}
+.summary-row.total{border-top:1px solid rgba(255,255,255,.08);margin-top:8px;padding-top:16px;font-size:1.1rem;font-weight:700;color:var(--text)}
+
+.submit-btn{width:100%;padding:16px;border-radius:var(--radius-sm);background:linear-gradient(135deg,var(--cyan),#00b4d8);color:var(--bg);font-weight:700;font-size:1rem;border:none;cursor:pointer;transition:all .3s;font-family:var(--font-body);margin-bottom:16px}
+.submit-btn:hover{box-shadow:0 8px 30px rgba(0,240,255,.3);transform:translateY(-1px)}
+.terms{text-align:center;font-size:.75rem;color:var(--text3);line-height:1.6}
+.terms a{color:var(--cyan);text-decoration:underline}
+
+/* Success */
+.success-msg{display:none;text-align:center;padding:48px 24px}
+.success-msg .icon{font-size:4rem;margin-bottom:16px}
+.success-msg h2{font-family:var(--font-display);font-size:1.6rem;font-weight:700;margin-bottom:8px}
+.success-msg p{color:var(--text2);font-size:.95rem;margin-bottom:24px}
+.success-msg .btn{padding:14px 36px;border-radius:100px;background:var(--cyan);color:var(--bg);font-weight:700;border:none;cursor:pointer;font-family:var(--font-body);font-size:.95rem}
+
+@media(max-width:700px){
+  .signup{padding:80px 20px 40px}
+  .form-row{grid-template-columns:1fr}
+  .nav{padding:14px 20px}
+}
+</style>
+</head>
+<body>
+<nav class="nav">
+  <div class="nav-logo" onclick="location.href='index.html'"><span class="dot"></span>SonicForge AI</div>
+  <a href="index.html"><button class="nav-back">← 返回首页</button></a>
+</nav>
+
+<div class="signup">
+  <div class="signup-header">
+    <h1>完成订阅</h1>
+    <p>选择支付方式，开始你的 AI 音乐创作之旅。</p>
+  </div>
+
+  <div id="formContent">
+    <div class="selected-plan">
+      <div class="plan-info">
+        <h3 id="planName">Pro 方案</h3>
+        <p id="planDesc">专业音乐人首选</p>
+      </div>
+      <div class="plan-price" id="planPrice">¥99<span>/月</span></div>
+    </div>
+
+    <div class="billing-toggle">
+      <button class="billing-opt active" data-billing="monthly" onclick="switchBilling('monthly')">月付</button>
+      <button class="billing-opt" data-billing="yearly" onclick="switchBilling('yearly')">年付 <span class="save">省20%</span></button>
+    </div>
+
+    <!-- Account info -->
+    <div class="pay-section">
+      <h3>账户信息</h3>
+      <div class="form-group">
+        <label>邮箱地址</label>
+        <input type="email" placeholder="your@email.com" id="email">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>设置密码</label>
+          <input type="password" placeholder="至少8位" id="password">
+        </div>
+        <div class="form-group">
+          <label>确认密码</label>
+          <input type="password" placeholder="再次输入" id="password2">
+        </div>
+      </div>
+    </div>
+
+    <!-- Payment method selection -->
+    <div class="pay-section" id="paymentSection">
+      <h3>选择支付方式</h3>
+      <div class="pay-methods">
+        <div class="pay-method active" data-pay="paypal" onclick="selectPay('paypal')">
+          <div class="pay-icon pay-icon-paypal">💳</div>
+          <div>
+            <div class="pay-name">PayPal</div>
+            <div class="pay-desc">支持全球信用卡/借记卡</div>
+          </div>
+          <div class="pay-radio"></div>
+        </div>
+        <div class="pay-method" data-pay="alipay" onclick="selectPay('alipay')">
+          <div class="pay-icon pay-icon-alipay">🅰</div>
+          <div>
+            <div class="pay-name">支付宝</div>
+            <div class="pay-desc">扫码支付，即时到账</div>
+          </div>
+          <div class="pay-radio"></div>
+        </div>
+        <div class="pay-method" data-pay="wechat" onclick="selectPay('wechat')">
+          <div class="pay-icon pay-icon-wechat">💬</div>
+          <div>
+            <div class="pay-name">微信支付</div>
+            <div class="pay-desc">微信扫码支付</div>
+          </div>
+          <div class="pay-radio"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PayPal panel -->
+    <div class="pay-panel active" id="panel-paypal">
+      <h4>PayPal 支付</h4>
+      <p>点击下方按钮将跳转到 PayPal 安全支付页面，支持信用卡、借记卡和 PayPal 余额付款。</p>
+      <div style="text-align:center;padding:16px 0">
+        <div class="qr-amount" id="paypalAmount">¥99</div>
+        <div class="qr-note">点击按钮前往 PayPal 完成付款</div>
+      </div>
+      <button class="submit-btn" style="background:linear-gradient(135deg,#0070c9,#003087)" onclick="goPaypal()">前往 PayPal 支付</button>
+    </div>
+
+    <!-- Alipay panel -->
+    <div class="pay-panel" id="panel-alipay">
+      <h4>支付宝扫码支付</h4>
+      <p>请使用支付宝扫描下方二维码完成付款，付款后请填写交易单号。</p>
+      <div class="qr-container">
+        <div class="qr-amount" id="alipayAmount">¥99</div>
+        <div class="qr-box">
+          <div class="qr-placeholder" id="alipayQR">支付宝收款码</div>
+        </div>
+        <div class="qr-note">请使用支付宝扫一扫</div>
+      </div>
+      <div class="form-group" style="margin-top:16px">
+        <label>支付宝交易单号（付款后填写）</label>
+        <input type="text" placeholder="请输入交易单号" id="alipayTxn">
+      </div>
+      <button class="submit-btn" style="background:linear-gradient(135deg,#00a0ff,#0066cc)" onclick="submitPayment('alipay')">确认已付款</button>
+    </div>
+
+    <!-- WeChat panel -->
+    <div class="pay-panel" id="panel-wechat">
+      <h4>微信扫码支付</h4>
+      <p>请使用微信扫描下方二维码完成付款，付款后请填写交易单号。</p>
+      <div class="qr-container">
+        <div class="qr-amount" id="wechatAmount">¥99</div>
+        <div class="qr-box">
+          <div class="qr-placeholder" id="wechatQR">微信收款码</div>
+        </div>
+        <div class="qr-note">请使用微信扫一扫</div>
+      </div>
+      <div class="form-group" style="margin-top:16px">
+        <label>微信支付交易单号（付款后填写）</label>
+        <input type="text" placeholder="请输入交易单号" id="wechatTxn">
+      </div>
+      <button class="submit-btn" style="background:linear-gradient(135deg,#07c160,#048a3c)" onclick="submitPayment('wechat')">确认已付款</button>
+    </div>
+
+    <!-- Summary -->
+    <div class="summary">
+      <div class="summary-row"><span>方案</span><span id="sumPlan">Pro · 月付</span></div>
+      <div class="summary-row"><span>生成额度</span><span id="sumQuota">200 首/月</span></div>
+      <div class="summary-row total"><span>应付金额</span><span id="sumTotal">¥99</span></div>
+    </div>
+
+    <!-- Free plan submit button -->
+    <button class="submit-btn" id="freeSubmitBtn" style="display:none" onclick="submitFree()">免费开始</button>
+
+    <div class="terms">
+      点击支付即表示你同意我们的<br>
+      <a href="terms.html">服务条款</a> 和 <a href="privacy.html">隐私政策</a>
+    </div>
+  </div>
+
+  <div class="success-msg" id="successMsg">
+    <div class="icon">🎉</div>
+    <h2>订阅成功！</h2>
+    <p>欢迎加入 SonicForge AI，你的创作之旅现在开始。</p>
+    <button class="btn" onclick="location.href='studio.html'">进入工作室</button>
+  </div>
+</div>
+
+<footer style="padding:40px 48px;border-top:1px solid rgba(255,255,255,.04);text-align:center;margin-top:40px">
+  <p style="font-size:.8rem;color:var(--text3);margin-bottom:12px">
+    <a href="index.html" style="color:var(--text2);margin:0 12px">首页</a>
+    <a href="studio.html" style="color:var(--text2);margin:0 12px">创作工作室</a>
+    <a href="community.html" style="color:var(--text2);margin:0 12px">创作者社区</a>
+    <a href="about.html" style="color:var(--text2);margin:0 12px">关于我们</a>
+  </p>
+  <p style="font-size:.75rem;color:var(--text3)">© 2026 SonicForge Technologies</p>
+</footer>
+
+<script>
+// ========== 收款配置 — 替换为你自己的收款信息 ==========
+const PAY_CONFIG = {
+  // PayPal: 填入你的 paypal.me 链接
+  paypal: {
+    link: 'https://www.paypal.com/paypalme/xiaokangjiao',
+    email: 'xiaokanjiao@outlook.com'
+  },
+  // 支付宝: 上传收款码图片后填入路径
+  alipay: {
+    qrImage: 'qr/alipay.jpg',
+  },
+  // 微信支付: 上传收款码图片后填入路径
+  wechat: {
+    qrImage: 'qr/wechat.png',
+  }
+};
+
+// ========== Plan logic ==========
+const params = new URLSearchParams(window.location.search);
+const plan = params.get('plan') || 'pro';
+
+const plans = {
+  free: { name: 'Free 方案', desc: '免费试用', price: 0, quota: '3 首/天' },
+  starter: { name: 'Starter 方案', desc: '个人创作者入门', price: 29, quota: '30 首/月' },
+  pro: { name: 'Pro 方案', desc: '专业音乐人首选', price: 99, quota: '200 首/月' },
+};
+
+const p = plans[plan] || plans.pro;
+let billing = 'monthly';
+let selectedPay = 'paypal';
+
+function getPrice() {
+  return billing === 'monthly' ? p.price : Math.round(p.price * 12 * 0.8);
+}
+
+function updatePrices() {
+  const price = getPrice();
+  const suffix = billing === 'monthly' ? '/月' : '/年';
+  document.getElementById('planPrice').innerHTML = `¥${price}<span>${suffix}</span>`;
+  document.getElementById('paypalAmount').textContent = `¥${price}`;
+  document.getElementById('alipayAmount').textContent = `¥${price}`;
+  document.getElementById('wechatAmount').textContent = `¥${price}`;
+  document.getElementById('sumPlan').textContent = `${p.name.split(' ')[0]} · ${billing === 'monthly' ? '月付' : '年付'}`;
+  document.getElementById('sumQuota').textContent = p.quota;
+  document.getElementById('sumTotal').textContent = `¥${price}`;
+}
+
+function switchBilling(type) {
+  billing = type;
+  document.querySelectorAll('.billing-opt').forEach(b => b.classList.remove('active'));
+  document.querySelector(`[data-billing="${type}"]`).classList.add('active');
+  updatePrices();
+}
+
+// ========== Payment method selection ==========
+function selectPay(method) {
+  selectedPay = method;
+  document.querySelectorAll('.pay-method').forEach(m => m.classList.remove('active'));
+  document.querySelector(`[data-pay="${method}"]`).classList.add('active');
+  document.querySelectorAll('.pay-panel').forEach(panel => panel.classList.remove('active'));
+  document.getElementById('panel-' + method).classList.add('active');
+}
+
+// ========== PayPal ==========
+async function goPaypal() {
+  const email = document.getElementById('email').value.trim();
+  const pw = document.getElementById('password').value;
+  const pw2 = document.getElementById('password2').value;
+
+  if (!email || !pw) { alert('请先填写邮箱和密码'); return; }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { alert('邮箱格式不正确'); return; }
+  if (pw.length < 8) { alert('密码至少8位'); return; }
+  if (pw !== pw2) { alert('两次密码输入不一致'); return; }
+
+  // 注册真实用户到 Supabase
+  const result = await Auth.signUp(email, pw, plan);
+  if (!result.success) {
+    alert('注册失败: ' + result.error);
+    return;
+  }
+
+  // 记录支付状态到数据库
+  if (result.user) {
+    await Payment.log(result.user.id, {
+      plan: plan,
+      amount: getPrice(),
+      method: 'paypal',
+      transactionId: 'paypal_' + Date.now(),
+      status: 'pending'
+    });
+  }
+
+  // Redirect to PayPal
+  const paypalLink = PAY_CONFIG.paypal.link;
+  if (paypalLink.includes('你的')) {
+    alert('支付系统正在配置中，请稍后再试。');
+    return;
+  }
+  window.open(paypalLink, '_blank');
+
+  // Show success after redirect
+  setTimeout(() => {
+    document.getElementById('formContent').style.display = 'none';
+    document.getElementById('successMsg').style.display = 'block';
+  }, 1000);
+}
+
+// ========== Alipay / WeChat ==========
+async function submitPayment(method) {
+  const email = document.getElementById('email').value.trim();
+  const pw = document.getElementById('password').value;
+  const pw2 = document.getElementById('password2').value;
+  const txnId = document.getElementById(method + 'Txn').value.trim();
+
+  if (!email || !pw) { alert('请先填写邮箱和密码'); return; }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { alert('邮箱格式不正确'); return; }
+  if (pw.length < 8) { alert('密码至少8位'); return; }
+  if (pw !== pw2) { alert('两次密码输入不一致'); return; }
+  if (!txnId) { alert('请填写交易单号'); return; }
+
+  // 注册真实用户到 Supabase
+  const result = await Auth.signUp(email, pw, plan);
+  if (!result.success) {
+    alert('注册失败: ' + result.error);
+    return;
+  }
+
+  // 记录支付状态到数据库
+  if (result.user) {
+    await Payment.log(result.user.id, {
+      plan: plan,
+      amount: getPrice(),
+      method: method,
+      transactionId: txnId,
+      status: 'pending'
+    });
+  }
+
+  document.getElementById('formContent').style.display = 'none';
+  document.getElementById('successMsg').style.display = 'block';
+}
+
+// ========== Free Plan ==========
+async function submitFree() {
+  const email = document.getElementById('email').value.trim();
+  const pw = document.getElementById('password').value;
+  const pw2 = document.getElementById('password2').value;
+
+  if (!email) { alert('请填写邮箱'); return; }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { alert('邮箱格式不正确'); return; }
+  if (!pw) { alert('请设置密码'); return; }
+  if (pw.length < 8) { alert('密码至少8位'); return; }
+  if (pw !== pw2) { alert('两次密码输入不一致'); return; }
+
+  // 注册真实用户到 Supabase
+  const result = await Auth.signUp(email, pw, 'free');
+  if (!result.success) {
+    alert('注册失败: ' + result.error);
+    return;
+  }
+
+  // 保存登录状态
+  localStorage.setItem('sf_logged_in', 'true');
+  localStorage.setItem('sf_user_email', email);
+
+  document.getElementById('formContent').style.display = 'none';
+  document.getElementById('successMsg').style.display = 'block';
+}
+
+// ========== Init QR codes ==========
+function initQR() {
+  if (PAY_CONFIG.alipay.qrImage) {
+    document.getElementById('alipayQR').outerHTML = `<img src="${PAY_CONFIG.alipay.qrImage}" alt="支付宝收款码">`;
+  }
+  if (PAY_CONFIG.wechat.qrImage) {
+    document.getElementById('wechatQR').outerHTML = `<img src="${PAY_CONFIG.wechat.qrImage}" alt="微信收款码">`;
+  }
+}
+
+// Init
+document.getElementById('planName').textContent = p.name;
+document.getElementById('planDesc').textContent = p.desc;
+updatePrices();
+initQR();
+
+// Handle free plan
+if (plan === 'free') {
+  document.getElementById('paymentSection').style.display = 'none';
+  document.getElementById('freeSubmitBtn').style.display = 'block';
+  document.querySelector('.billing-toggle').style.display = 'none';
+}
+</script>
+</body>
+</html>

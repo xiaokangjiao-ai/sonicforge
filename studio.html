@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SonicForge AI — 创作工作室</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Noto+Sans+SC:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-client.js"></script>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#08080c;--bg2:#0e0e14;--bg3:#16161f;--text:#e8e6f0;--text2:#9896a8;--text3:#5c5a6e;--cyan:#00f0ff;--magenta:#ff2d8a;--amber:#ffb300;--lime:#a8ff00;--radius:16px;--radius-sm:10px;--font-display:'Outfit','Noto Sans SC',sans-serif;--font-body:'Noto Sans SC','Outfit',sans-serif;--font-mono:'JetBrains Mono',monospace}
+html{scroll-behavior:smooth;font-size:16px}
+body{background:var(--bg);color:var(--text);font-family:var(--font-body);overflow-x:hidden;line-height:1.6;min-height:100vh}
+::selection{background:var(--cyan);color:var(--bg)}
+a{color:inherit;text-decoration:none}
+
+.nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:16px 48px;display:flex;align-items:center;justify-content:space-between;backdrop-filter:blur(20px);background:rgba(8,8,12,.85);border-bottom:1px solid rgba(255,255,255,.04)}
+.nav-logo{font-family:var(--font-display);font-weight:800;font-size:1.3rem;display:flex;align-items:center;gap:10px;cursor:pointer}
+.nav-logo .dot{width:8px;height:8px;border-radius:50%;background:var(--cyan);box-shadow:0 0 10px var(--cyan)}
+.nav-back{padding:8px 20px;border-radius:100px;border:1px solid rgba(255,255,255,.12);background:transparent;color:var(--text2);font-size:.85rem;cursor:pointer;transition:all .2s;font-family:var(--font-body)}
+.nav-back:hover{border-color:var(--text);color:var(--text)}
+
+.studio{padding:100px 48px 60px;max-width:1200px;margin:0 auto}
+.studio-header{margin-bottom:48px}
+.studio-header h1{font-family:var(--font-display);font-size:2.2rem;font-weight:800;letter-spacing:-.02em;margin-bottom:8px}
+.studio-header p{color:var(--text2);font-size:.95rem}
+
+.studio-layout{display:grid;grid-template-columns:320px 1fr;gap:32px}
+
+.controls{display:flex;flex-direction:column;gap:20px}
+.ctrl-group{background:var(--bg2);border:1px solid rgba(255,255,255,.05);border-radius:var(--radius);padding:24px}
+.ctrl-group h3{font-family:var(--font-display);font-size:.9rem;font-weight:600;margin-bottom:16px;color:var(--text2);text-transform:uppercase;letter-spacing:.08em}
+
+.genre-select{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.genre-opt{padding:10px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.08);background:transparent;color:var(--text2);font-size:.8rem;cursor:pointer;transition:all .2s;text-align:center;font-family:var(--font-body)}
+.genre-opt:hover{border-color:rgba(255,255,255,.2);color:var(--text)}
+.genre-opt.active{border-color:var(--cyan);background:rgba(0,240,255,.08);color:var(--cyan)}
+
+.slider-row{margin-bottom:16px}
+.slider-row:last-child{margin-bottom:0}
+.slider-label{display:flex;justify-content:space-between;margin-bottom:8px;font-size:.8rem}
+.slider-label span:first-child{color:var(--text2)}
+.slider-label span:last-child{font-family:var(--font-mono);color:var(--cyan);font-size:.75rem}
+input[type="range"]{width:100%;height:4px;-webkit-appearance:none;background:var(--bg3);border-radius:2px;outline:none}
+input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--cyan);cursor:pointer;box-shadow:0 0 8px rgba(0,240,255,.4)}
+
+.prompt-input{width:100%;min-height:100px;background:var(--bg);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:14px;color:var(--text);font-family:var(--font-body);font-size:.9rem;resize:vertical;outline:none;transition:border-color .2s}
+.prompt-input:focus{border-color:var(--cyan)}
+.prompt-input::placeholder{color:var(--text3)}
+
+.generate-btn{width:100%;padding:16px;border-radius:var(--radius-sm);background:linear-gradient(135deg,var(--cyan),#00b4d8);color:var(--bg);font-weight:700;font-size:1rem;border:none;cursor:pointer;transition:all .3s;font-family:var(--font-body);position:relative;overflow:hidden}
+.generate-btn:hover{box-shadow:0 8px 30px rgba(0,240,255,.3);transform:translateY(-1px)}
+.generate-btn:disabled{opacity:.6;cursor:not-allowed;transform:none;box-shadow:none}
+.generate-btn .btn-text{position:relative;z-index:2}
+.generate-btn.loading .btn-text{opacity:0}
+.generate-btn .spinner{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .3s}
+.generate-btn.loading .spinner{opacity:1}
+.spinner-ring{width:24px;height:24px;border:3px solid rgba(8,8,12,.3);border-top-color:var(--bg);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.output-panel{display:flex;flex-direction:column;gap:20px}
+
+.waveform-display{background:var(--bg2);border:1px solid rgba(255,255,255,.05);border-radius:var(--radius);padding:32px;min-height:200px;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.waveform-canvas{width:100%;height:120px}
+.waveform-placeholder{text-align:center;color:var(--text3)}
+.waveform-placeholder .icon{font-size:3rem;margin-bottom:12px;opacity:.3}
+.waveform-placeholder p{font-size:.9rem}
+
+.player-controls{display:flex;align-items:center;gap:16px;width:100%;max-width:500px;margin-top:20px}
+.play-toggle{width:48px;height:48px;border-radius:50%;border:2px solid var(--cyan);background:rgba(0,240,255,.08);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;flex-shrink:0}
+.play-toggle:hover{background:rgba(0,240,255,.15);box-shadow:0 0 16px rgba(0,240,255,.3)}
+.play-toggle svg{width:20px;height:20px;fill:var(--cyan)}
+.progress-bar{flex:1;height:4px;background:var(--bg3);border-radius:2px;position:relative;cursor:pointer}
+.progress-fill{height:100%;background:var(--cyan);border-radius:2px;width:0%;transition:width .1s linear}
+.time-display{font-family:var(--font-mono);font-size:.75rem;color:var(--text3);flex-shrink:0;min-width:80px;text-align:right}
+
+.export-row{display:flex;gap:10px;margin-top:12px}
+.export-btn{padding:10px 20px;border-radius:8px;border:1px solid rgba(255,255,255,.1);background:var(--bg);color:var(--text2);font-size:.8rem;font-family:var(--font-mono);cursor:pointer;transition:all .2s}
+.export-btn:hover{border-color:var(--cyan);color:var(--cyan)}
+
+.history{background:var(--bg2);border:1px solid rgba(255,255,255,.05);border-radius:var(--radius);padding:24px}
+.history h3{font-family:var(--font-display);font-size:.9rem;font-weight:600;margin-bottom:16px;color:var(--text2);text-transform:uppercase;letter-spacing:.08em}
+.history-list{display:flex;flex-direction:column;gap:10px}
+.history-item{display:flex;align-items:center;gap:12px;padding:12px;border-radius:8px;background:var(--bg);border:1px solid rgba(255,255,255,.03);cursor:pointer;transition:all .2s}
+.history-item:hover{border-color:rgba(255,255,255,.1)}
+.history-item .h-genre{font-size:.7rem;font-family:var(--font-mono);padding:3px 8px;border-radius:4px;background:rgba(0,240,255,.1);color:var(--cyan);text-transform:uppercase}
+.history-item .h-info{flex:1}
+.history-item .h-title{font-size:.85rem;font-weight:500}
+.history-item .h-meta{font-size:.7rem;color:var(--text3);margin-top:2px}
+.history-item .h-dur{font-family:var(--font-mono);font-size:.75rem;color:var(--text3)}
+.history-item .h-del{width:24px;height:24px;border-radius:4px;border:none;background:transparent;color:var(--text3);cursor:pointer;font-size:.8rem;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.history-item .h-del:hover{background:rgba(255,45,138,.1);color:var(--magenta)}
+.history-empty{text-align:center;padding:24px;color:var(--text3);font-size:.85rem}
+
+.status-bar{display:flex;align-items:center;gap:8px;padding:12px 16px;border-radius:8px;background:var(--bg);border:1px solid rgba(255,255,255,.03);font-size:.8rem;color:var(--text3)}
+.status-dot{width:6px;height:6px;border-radius:50%;background:var(--lime);box-shadow:0 0 6px var(--lime)}
+.status-bar.generating .status-dot{background:var(--amber);box-shadow:0 0 6px var(--amber);animation:pulse-dot 1s ease infinite}
+@keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:.3}}
+
+@media(max-width:900px){
+  .studio{padding:80px 20px 40px}
+  .studio-layout{grid-template-columns:1fr}
+  .nav{padding:14px 20px}
+}
+
+/* Quota bar */
+.quota-bar{display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:8px;background:var(--bg2);border:1px solid rgba(255,255,255,.05);margin-bottom:20px;font-size:.85rem}
+.quota-bar .quota-info{flex:1}
+.quota-bar .quota-count{font-family:var(--font-mono);color:var(--cyan);font-weight:600}
+.quota-bar .quota-plan{font-size:.75rem;color:var(--text3);margin-top:2px}
+.quota-bar .upgrade-btn{padding:6px 16px;border-radius:100px;background:var(--cyan);color:var(--bg);font-size:.75rem;font-weight:600;border:none;cursor:pointer;transition:all .2s}
+.quota-bar .upgrade-btn:hover{box-shadow:0 0 16px rgba(0,240,255,.3)}
+.quota-bar.warning .quota-count{color:var(--amber)}
+.quota-bar.empty .quota-count{color:var(--magenta)}
+
+/* User status */
+.user-status{display:flex;align-items:center;gap:10px;font-size:.8rem;color:var(--text2)}
+.user-status .email{font-family:var(--font-mono);font-size:.75rem;color:var(--text3)}
+.user-status .logout-btn{padding:6px 14px;border-radius:100px;border:1px solid rgba(255,255,255,.1);background:transparent;color:var(--text3);font-size:.75rem;cursor:pointer;transition:all .2s;font-family:var(--font-body)}
+.user-status .logout-btn:hover{border-color:var(--magenta);color:var(--magenta)}
+
+/* Login modal */
+.login-overlay{display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.7);backdrop-filter:blur(8px);align-items:center;justify-content:center}
+.login-overlay.show{display:flex}
+.login-box{background:var(--bg2);border:1px solid rgba(255,255,255,.08);border-radius:var(--radius);padding:36px;max-width:400px;width:90%}
+.login-box h2{font-family:var(--font-display);font-size:1.5rem;font-weight:700;margin-bottom:8px}
+.login-box p{color:var(--text2);font-size:.9rem;margin-bottom:20px}
+.login-box .form-group{margin-bottom:14px}
+.login-box label{display:block;font-size:.85rem;color:var(--text2);margin-bottom:6px}
+.login-box input{width:100%;padding:12px 14px;border-radius:8px;border:1px solid rgba(255,255,255,.08);background:var(--bg);color:var(--text);font-size:.9rem;font-family:var(--font-body);outline:none;transition:border-color .2s}
+.login-box input:focus{border-color:var(--cyan)}
+.login-box input::placeholder{color:var(--text3)}
+.login-box .login-btn{width:100%;padding:14px;border-radius:8px;background:linear-gradient(135deg,var(--cyan),#00b4d8);color:var(--bg);font-weight:700;font-size:.95rem;border:none;cursor:pointer;transition:all .3s;font-family:var(--font-body);margin-top:8px}
+.login-box .login-btn:hover{box-shadow:0 8px 30px rgba(0,240,255,.3)}
+.login-box .switch-mode{text-align:center;margin-top:16px;font-size:.85rem;color:var(--text3)}
+.login-box .switch-mode a{color:var(--cyan);cursor:pointer}
+.login-box .error-msg{color:var(--magenta);font-size:.8rem;margin-top:8px;display:none}
+.login-box .close-modal{position:absolute;top:16px;right:16px;background:none;border:none;color:var(--text3);font-size:1.2rem;cursor:pointer}
+</style>
+</head>
+<body>
+<nav class="nav">
+  <div class="nav-logo" onclick="location.href='index.html'"><span class="dot"></span>SonicForge AI</div>
+  <div class="user-status" id="userStatus" style="display:none">
+    <span class="email" id="userEmail"></span>
+    <button class="logout-btn" onclick="logout()">退出</button>
+  </div>
+  <a href="index.html"><button class="nav-back">← 返回首页</button></a>
+</nav>
+
+<!-- Login Modal -->
+<div class="login-overlay" id="loginOverlay">
+  <div class="login-box" style="position:relative">
+    <button class="close-modal" onclick="closeLogin()">×</button>
+    <h2 id="loginTitle">登录</h2>
+    <p id="loginDesc">登录后可使用 AI 音乐生成功能。</p>
+    <div class="form-group">
+      <label>邮箱地址</label>
+      <input type="email" placeholder="your@email.com" id="loginEmail">
+    </div>
+    <div class="form-group">
+      <label>密码</label>
+      <input type="password" placeholder="你的密码" id="loginPassword">
+    </div>
+    <div class="error-msg" id="loginError"></div>
+    <button class="login-btn" id="loginBtn" onclick="doLogin()">登录</button>
+    <div class="switch-mode">
+      <span id="switchText">还没有账号？</span>
+      <a onclick="toggleLoginMode()" id="switchLink">立即注册</a>
+    </div>
+  </div>
+</div>
+
+<div class="studio">
+  <div class="studio-header">
+    <h1>创作工作室</h1>
+    <p>选择风格、调节参数、描述你的创意，AI 将为你生成独一无二的音乐。</p>
+  </div>
+
+  <div class="quota-bar" id="quotaBar" style="display:none">
+    <div class="quota-info">
+      <div class="quota-count" id="quotaCount">-- / --</div>
+      <div class="quota-plan" id="quotaPlan">--</div>
+    </div>
+    <button class="upgrade-btn" id="upgradeBtn" onclick="location.href='signup.html?plan=starter'" style="display:none">升级方案</button>
+  </div>
+
+  <div class="studio-layout">
+    <div class="controls">
+      <div class="ctrl-group">
+        <h3>音乐风格</h3>
+        <div class="genre-select" id="genreSelect">
+          <button class="genre-opt active" data-genre="electronic">Electronic</button>
+          <button class="genre-opt" data-genre="jazz">Jazz</button>
+          <button class="genre-opt" data-genre="classical">Classical</button>
+          <button class="genre-opt" data-genre="hiphop">Hip-Hop</button>
+          <button class="genre-opt" data-genre="lofi">Lo-Fi</button>
+          <button class="genre-opt" data-genre="cinematic">Cinematic</button>
+          <button class="genre-opt" data-genre="pop">Pop</button>
+          <button class="genre-opt" data-genre="ambient">Ambient</button>
+        </div>
+      </div>
+
+      <div class="ctrl-group">
+        <h3>参数调节</h3>
+        <div class="slider-row">
+          <div class="slider-label"><span>BPM 速度</span><span id="bpmVal">120</span></div>
+          <input type="range" id="bpm" min="60" max="200" value="120">
+        </div>
+        <div class="slider-row">
+          <div class="slider-label"><span>情感强度</span><span id="intensityVal">60%</span></div>
+          <input type="range" id="intensity" min="0" max="100" value="60">
+        </div>
+        <div class="slider-row">
+          <div class="slider-label"><span>复杂度</span><span id="complexityVal">50%</span></div>
+          <input type="range" id="complexity" min="0" max="100" value="50">
+        </div>
+        <div class="slider-row">
+          <div class="slider-label"><span>时长</span><span id="durationVal">30s</span></div>
+          <input type="range" id="duration" min="10" max="120" value="30">
+        </div>
+      </div>
+
+      <div class="ctrl-group">
+        <h3>创意描述</h3>
+        <textarea class="prompt-input" id="promptInput" placeholder="描述你想要的音乐氛围...&#10;例如：夜晚城市漫游的电子音乐，带有霓虹灯光的感觉"></textarea>
+      </div>
+
+      <button class="generate-btn" id="generateBtn">
+        <span class="btn-text">生成音乐</span>
+        <div class="spinner"><div class="spinner-ring"></div></div>
+      </button>
+
+      <div class="status-bar" id="statusBar">
+        <span class="status-dot"></span>
+        <span id="statusText">就绪 — 等待生成</span>
+      </div>
+    </div>
+
+    <div class="output-panel">
+      <div class="waveform-display" id="waveformDisplay">
+        <div class="waveform-placeholder" id="placeholder">
+          <div class="icon">🎵</div>
+          <p>配置参数后点击「生成音乐」</p>
+        </div>
+        <canvas class="waveform-canvas" id="waveformCanvas" style="display:none"></canvas>
+        <div class="player-controls" id="playerControls" style="display:none">
+          <div class="play-toggle" id="playToggle">
+            <svg viewBox="0 0 24 24" id="playIcon"><polygon points="8,5 19,12 8,19"/></svg>
+          </div>
+          <div class="progress-bar" id="progressBar"><div class="progress-fill" id="progressFill"></div></div>
+          <div class="time-display" id="timeDisplay">0:00 / 0:00</div>
+        </div>
+        <div class="export-row" id="exportRow" style="display:none">
+          <button class="export-btn" onclick="exportAudio('wav')">导出 WAV</button>
+          <button class="export-btn" onclick="exportAudio('mp3')">导出 MP3</button>
+        </div>
+      </div>
+
+      <div class="history">
+        <h3>生成历史</h3>
+        <div class="history-list" id="historyList">
+          <div class="history-empty">还没有生成记录，开始创作吧</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ========== STATE ==========
+let selectedGenre = 'electronic';
+let audioCtx = null;
+let currentBuffer = null;
+let sourceNode = null;
+let isPlaying = false;
+let playStartCtxTime = 0;
+let playOffset = 0;
+let animFrame = null;
+let currentUser = null;
+let userProfile = null;
+let loginMode = 'login'; // 'login' or 'register'
+
+// ========== AUTH CHECK ==========
+async function checkAuth() {
+  const user = await Auth.getCurrentUser();
+  if (user) {
+    currentUser = user;
+    userProfile = await Auth.getProfile(user.id);
+    document.getElementById('userStatus').style.display = 'flex';
+    document.getElementById('userEmail').textContent = user.email;
+    document.getElementById('quotaBar').style.display = 'flex';
+    updateQuotaDisplay();
+  } else {
+    // 未登录，显示登录弹窗
+    openLogin();
+  }
+}
+
+function updateQuotaDisplay() {
+  if (!userProfile) return;
+  const quotaBar = document.getElementById('quotaBar');
+  const remaining = userProfile.quota_limit - userProfile.quota_used;
+  document.getElementById('quotaCount').textContent = `${remaining} / ${userProfile.quota_limit}`;
+  const planNames = { free: '免费方案', starter: 'Starter 方案', pro: 'Pro 方案', enterprise: 'Enterprise 方案' };
+  document.getElementById('quotaPlan').textContent = (planNames[userProfile.plan] || userProfile.plan) + (userProfile.plan === 'free' ? ' · 每日重置' : ' · 每月重置');
+  document.getElementById('upgradeBtn').style.display = (userProfile.plan === 'free' || remaining <= 5) ? 'block' : 'none';
+  quotaBar.className = 'quota-bar' + (remaining === 0 ? ' empty' : remaining <= 3 ? ' warning' : '');
+}
+
+// ========== LOGIN MODAL ==========
+function openLogin() {
+  document.getElementById('loginOverlay').classList.add('show');
+  document.getElementById('loginError').style.display = 'none';
+}
+function closeLogin() {
+  document.getElementById('loginOverlay').classList.remove('show');
+}
+function toggleLoginMode() {
+  loginMode = loginMode === 'login' ? 'register' : 'login';
+  document.getElementById('loginTitle').textContent = loginMode === 'login' ? '登录' : '注册';
+  document.getElementById('loginDesc').textContent = loginMode === 'login' ? '登录后可使用 AI 音乐生成功能。' : '注册账号，每日免费生成 3 首音乐。';
+  document.getElementById('loginBtn').textContent = loginMode === 'login' ? '登录' : '注册';
+  document.getElementById('switchText').textContent = loginMode === 'login' ? '还没有账号？' : '已有账号？';
+  document.getElementById('switchLink').textContent = loginMode === 'login' ? '立即注册' : '去登录';
+  document.getElementById('loginError').style.display = 'none';
+}
+function showLoginError(msg) {
+  const el = document.getElementById('loginError');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+async function doLogin() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  if (!email || !password) { showLoginError('请填写邮箱和密码'); return; }
+
+  const btn = document.getElementById('loginBtn');
+  btn.disabled = true;
+  btn.textContent = '处理中...';
+
+  if (loginMode === 'register') {
+    if (password.length < 8) { showLoginError('密码至少8位'); btn.disabled = false; btn.textContent = '注册'; return; }
+    const result = await Auth.signUp(email, password, 'free');
+    if (!result.success) {
+      showLoginError(result.error === 'User already registered' ? '该邮箱已注册，请直接登录' : result.error);
+      btn.disabled = false; btn.textContent = '注册'; return;
+    }
+  }
+
+  const result = await Auth.signIn(email, password);
+  if (!result.success) {
+    showLoginError(result.error === 'Invalid login credentials' ? '邮箱或密码错误' : result.error);
+    btn.disabled = false; btn.textContent = loginMode === 'login' ? '登录' : '注册'; return;
+  }
+
+  currentUser = result.user;
+  userProfile = await Auth.getProfile(result.user.id);
+  document.getElementById('userStatus').style.display = 'flex';
+  document.getElementById('userEmail').textContent = result.user.email;
+  document.getElementById('quotaBar').style.display = 'flex';
+  updateQuotaDisplay();
+  closeLogin();
+  btn.disabled = false;
+  btn.textContent = loginMode === 'login' ? '登录' : '注册';
+}
+async function logout() {
+  await Auth.signOut();
+  currentUser = null;
+  userProfile = null;
+  document.getElementById('userStatus').style.display = 'none';
+  document.getElementById('quotaBar').style.display = 'none';
+  openLogin();
+}
+
+// 页面加载时检查登录状态
+checkAuth();
+
+function getCtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  return audioCtx;
+}
+
+// ========== GENRE SELECT ==========
+document.querySelectorAll('.genre-opt').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.genre-opt').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    selectedGenre = btn.dataset.genre;
+  });
+});
+
+// URL param for genre
+const urlGenre = new URLSearchParams(location.search).get('genre');
+if (urlGenre) {
+  const btn = document.querySelector(`[data-genre="${urlGenre}"]`);
+  if (btn) {
+    document.querySelectorAll('.genre-opt').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    selectedGenre = urlGenre;
+  }
+}
+
+// ========== SLIDERS ==========
+const bpm = document.getElementById('bpm');
+const intensity = document.getElementById('intensity');
+const complexity = document.getElementById('complexity');
+const duration = document.getElementById('duration');
+bpm.oninput = () => document.getElementById('bpmVal').textContent = bpm.value;
+intensity.oninput = () => document.getElementById('intensityVal').textContent = intensity.value + '%';
+complexity.oninput = () => document.getElementById('complexityVal').textContent = complexity.value + '%';
+duration.oninput = () => document.getElementById('durationVal').textContent = duration.value + 's';
+
+// ========== AUDIO SYNTHESIS ENGINE ==========
+const SCALES = {
+  electronic: [0,3,5,7,10,12,15,17],
+  jazz:       [0,2,4,7,9,11,14,16],
+  classical:  [0,2,4,5,7,9,11,12],
+  hiphop:     [0,3,5,7,10,12,15],
+  lofi:       [0,2,3,5,7,9,12,14],
+  cinematic:  [0,2,4,7,12,14,16,19],
+  pop:        [0,2,4,5,7,9,11,12],
+  ambient:    [0,5,7,12,17,19,24]
+};
+
+const GENRE_CONFIG = {
+  electronic: { rootFreq: 110, wave: 'sawtooth', attack: 0.01, release: 0.08, filterFreq: 1200, noteLen: 0.15, padVol: 0.06, bassVol: 0.12, leadVol: 0.08 },
+  jazz:       { rootFreq: 220, wave: 'sine',     attack: 0.04, release: 0.25, filterFreq: 3000, noteLen: 0.3,  padVol: 0.04, bassVol: 0.08, leadVol: 0.1 },
+  classical:  { rootFreq: 261, wave: 'triangle', attack: 0.08, release: 0.4,  filterFreq: 4000, noteLen: 0.5,  padVol: 0.05, bassVol: 0.06, leadVol: 0.09 },
+  hiphop:     { rootFreq: 55,  wave: 'square',   attack: 0.005,release: 0.04, filterFreq: 500,  noteLen: 0.12, padVol: 0.03, bassVol: 0.15, leadVol: 0.07 },
+  lofi:       { rootFreq: 196, wave: 'sine',     attack: 0.06, release: 0.35, filterFreq: 800,  noteLen: 0.4,  padVol: 0.06, bassVol: 0.07, leadVol: 0.08 },
+  cinematic:  { rootFreq: 73,  wave: 'sawtooth', attack: 0.25, release: 0.6,  filterFreq: 1500, noteLen: 0.8,  padVol: 0.08, bassVol: 0.1,  leadVol: 0.07 },
+  pop:        { rootFreq: 261, wave: 'square',   attack: 0.01, release: 0.12, filterFreq: 3000, noteLen: 0.2,  padVol: 0.05, bassVol: 0.09, leadVol: 0.1 },
+  ambient:    { rootFreq: 130, wave: 'sine',     attack: 0.4,  release: 1.2,  filterFreq: 600,  noteLen: 1.5,  padVol: 0.07, bassVol: 0.05, leadVol: 0.06 }
+};
+
+function midiToFreq(midi) { return 440 * Math.pow(2, (midi - 69) / 12); }
+
+function generateMusic(genre, durSec, bpmVal, intensityVal, complexityVal) {
+  const ctx = getCtx();
+  const sr = ctx.sampleRate;
+  const len = Math.floor(durSec * sr);
+  const buf = ctx.createBuffer(2, len, sr);
+  const L = buf.getChannelData(0);
+  const R = buf.getChannelData(1);
+  const cfg = GENRE_CONFIG[genre];
+  const scale = SCALES[genre];
+  const beatDur = 60 / bpmVal;
+  const rootMidi = Math.round(12 * Math.log2(cfg.rootFreq / 440)) + 69;
+  const vol = intensityVal / 100;
+  const noteCount = Math.max(2, Math.floor(complexityVal / 12));
+
+  // Seeded random for reproducibility within a generation
+  let seed = Date.now();
+  function rand() { seed = (seed * 16807 + 0) % 2147483647; return (seed - 1) / 2147483646; }
+
+  // Generate bass line
+  let t = 0;
+  while (t < durSec) {
+    const noteIdx = scale[Math.floor(rand() * Math.min(3, scale.length))];
+    const freq = midiToFreq(rootMidi + noteIdx - 12);
+    const noteDur = beatDur * (1 + Math.floor(rand() * 2));
+    const startSample = Math.floor(t * sr);
+    const endSample = Math.min(len, Math.floor((t + noteDur) * sr));
+
+    for (let i = 0; i < endSample - startSample; i++) {
+      const env = Math.min(1, i / (sr * cfg.attack)) * Math.min(1, (endSample - startSample - i) / (sr * cfg.release));
+      const phase = (freq * (startSample + i)) / sr;
+      let s = 0;
+      if (cfg.wave === 'sine') s = Math.sin(2 * Math.PI * phase);
+      else if (cfg.wave === 'sawtooth') s = 2 * (phase % 1) - 1;
+      else if (cfg.wave === 'square') s = (phase % 1) < 0.5 ? 1 : -1;
+      else s = 4 * Math.abs((phase % 1) - 0.5) - 1;
+      const val = s * env * cfg.bassVol * vol;
+      L[startSample + i] += val;
+      R[startSample + i] += val;
+    }
+    t += noteDur;
+  }
+
+  // Generate lead melody
+  t = beatDur * 2;
+  while (t < durSec) {
+    const noteIdx = scale[Math.floor(rand() * Math.min(noteCount, scale.length))];
+    const freq = midiToFreq(rootMidi + noteIdx + 12);
+    const noteDur = cfg.noteLen * (0.5 + rand());
+    const startSample = Math.floor(t * sr);
+    const endSample = Math.min(len, Math.floor((t + noteDur) * sr));
+
+    for (let i = 0; i < endSample - startSample; i++) {
+      const env = Math.min(1, i / (sr * cfg.attack * 0.5)) * Math.min(1, (endSample - startSample - i) / (sr * cfg.release * 0.5));
+      const phase = (freq * (startSample + i)) / sr;
+      let s = 0;
+      if (cfg.wave === 'sine') s = Math.sin(2 * Math.PI * phase);
+      else if (cfg.wave === 'sawtooth') s = 2 * (phase % 1) - 1;
+      else if (cfg.wave === 'square') s = (phase % 1) < 0.5 ? 1 : -1;
+      else s = 4 * Math.abs((phase % 1) - 0.5) - 1;
+      // Add harmonics
+      s += 0.3 * Math.sin(2 * Math.PI * phase * 2);
+      s += 0.15 * Math.sin(2 * Math.PI * phase * 3);
+      const val = s * env * cfg.leadVol * vol;
+      // Stereo spread
+      const pan = 0.5 + 0.5 * Math.sin(2 * Math.PI * 0.3 * t);
+      L[startSample + i] += val * (1 - pan * 0.3);
+      R[startSample + i] += val * (0.7 + pan * 0.3);
+    }
+    t += cfg.noteLen * (0.5 + rand() * 0.5);
+  }
+
+  // Generate pad/chords
+  t = 0;
+  const chordDur = beatDur * 4;
+  while (t < durSec) {
+    const chordNotes = [0, 2, 4].map(i => scale[Math.min(i, scale.length - 1)]);
+    const startSample = Math.floor(t * sr);
+    const endSample = Math.min(len, Math.floor((t + chordDur) * sr));
+
+    for (let n = 0; n < chordNotes.length; n++) {
+      const freq = midiToFreq(rootMidi + chordNotes[n]);
+      for (let i = 0; i < endSample - startSample; i++) {
+        const env = Math.min(1, i / (sr * 0.3)) * Math.min(1, (endSample - startSample - i) / (sr * 0.3));
+        const phase = (freq * (startSample + i)) / sr;
+        const s = Math.sin(2 * Math.PI * phase) * 0.7 + Math.sin(2 * Math.PI * phase * 2) * 0.2;
+        const val = s * env * cfg.padVol * vol;
+        L[startSample + i] += val;
+        R[startSample + i] += val * 0.95;
+      }
+    }
+    t += chordDur;
+  }
+
+  // Generate drums (kick + hihat pattern)
+  t = 0;
+  while (t < durSec) {
+    const startSample = Math.floor(t * sr);
+    // Kick
+    const kickDur = 0.12;
+    const kickEnd = Math.min(len, startSample + Math.floor(kickDur * sr));
+    for (let i = 0; i < kickEnd - startSample; i++) {
+      const freq = 60 * Math.exp(-i / (sr * 0.02));
+      const env = Math.exp(-i / (sr * 0.04));
+      const s = Math.sin(2 * Math.PI * freq * i / sr) * env * 0.2 * vol;
+      L[startSample + i] += s;
+      R[startSample + i] += s;
+    }
+    // Hihat on off-beats
+    const hihatOffset = Math.floor(beatDur * 0.5 * sr);
+    const hStart = startSample + hihatOffset;
+    if (hStart < len) {
+      const hihatDur = 0.04;
+      const hEnd = Math.min(len, hStart + Math.floor(hihatDur * sr));
+      for (let i = 0; i < hEnd - hStart; i++) {
+        const env = Math.exp(-i / (sr * 0.01));
+        const noise = (rand() * 2 - 1) * env * 0.06 * vol;
+        L[hStart + i] += noise;
+        R[hStart + i] += noise * 0.9;
+      }
+    }
+    t += beatDur;
+  }
+
+  // Soft master
+  for (let i = 0; i < len; i++) {
+    L[i] = Math.tanh(L[i] * 2) * 0.8;
+    R[i] = Math.tanh(R[i] * 2) * 0.8;
+  }
+
+  return buf;
+}
+
+// ========== WAVEFORM DRAWING ==========
+function drawWaveform(buffer) {
+  const canvas = document.getElementById('waveformCanvas');
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  const w = rect.width, h = rect.height;
+  const data = buffer.getChannelData(0);
+  const step = Math.ceil(data.length / w);
+  const amp = h / 2;
+
+  ctx.clearRect(0, 0, w, h);
+  const gradient = ctx.createLinearGradient(0, 0, w, 0);
+  gradient.addColorStop(0, '#00f0ff');
+  gradient.addColorStop(0.5, '#ff2d8a');
+  gradient.addColorStop(1, '#ffb300');
+  ctx.strokeStyle = gradient;
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  for (let x = 0; x < w; x++) {
+    let min = 1, max = -1;
+    for (let j = 0; j < step; j++) {
+      const val = data[x * step + j] || 0;
+      if (val < min) min = val;
+      if (val > max) max = val;
+    }
+    const y = (1 + (min + max) / 2) * amp;
+    if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+}
+
+// ========== PLAYBACK ==========
+function formatTime(s) {
+  const m = Math.floor(s / 60);
+  const sec = Math.floor(s % 60);
+  return m + ':' + (sec < 10 ? '0' : '') + sec;
+}
+
+function stopPlayback() {
+  if (sourceNode) {
+    try { sourceNode.stop(); } catch(e) {}
+    sourceNode.disconnect();
+    sourceNode = null;
+  }
+  isPlaying = false;
+  playOffset = 0;
+  cancelAnimationFrame(animFrame);
+  document.getElementById('playIcon').innerHTML = '<polygon points="8,5 19,12 8,19"/>';
+  document.getElementById('progressFill').style.width = '0%';
+}
+
+function startPlayback(offset) {
+  if (!currentBuffer) return;
+  const ctx = getCtx();
+  stopPlayback();
+  sourceNode = ctx.createBufferSource();
+  sourceNode.buffer = currentBuffer;
+  sourceNode.connect(ctx.destination);
+  sourceNode.start(0, offset);
+  playStartCtxTime = ctx.currentTime - offset;
+  isPlaying = true;
+  document.getElementById('playIcon').innerHTML = '<rect x="6" y="5" width="4" height="14"/><rect x="14" y="5" width="4" height="14"/>';
+  sourceNode.onended = () => {
+    if (isPlaying) {
+      isPlaying = false;
+      playOffset = 0;
+      document.getElementById('playIcon').innerHTML = '<polygon points="8,5 19,12 8,19"/>';
+      document.getElementById('progressFill').style.width = '0%';
+      document.getElementById('timeDisplay').textContent = '0:00 / ' + formatTime(currentBuffer.duration);
+    }
+  };
+  updateProgress();
+}
+
+function updateProgress() {
+  if (!isPlaying || !currentBuffer) return;
+  const ctx = getCtx();
+  const elapsed = ctx.currentTime - playStartCtxTime;
+  const dur = currentBuffer.duration;
+  if (elapsed >= dur) {
+    stopPlayback();
+    return;
+  }
+  const pct = (elapsed / dur) * 100;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('timeDisplay').textContent = formatTime(elapsed) + ' / ' + formatTime(dur);
+  animFrame = requestAnimationFrame(updateProgress);
+}
+
+document.getElementById('playToggle').addEventListener('click', () => {
+  if (!currentBuffer) return;
+  if (isPlaying) {
+    playOffset = getCtx().currentTime - playStartCtxTime;
+    stopPlayback();
+    // Keep progress bar position
+    const pct = (playOffset / currentBuffer.duration) * 100;
+    document.getElementById('progressFill').style.width = pct + '%';
+    document.getElementById('timeDisplay').textContent = formatTime(playOffset) + ' / ' + formatTime(currentBuffer.duration);
+  } else {
+    startPlayback(playOffset);
+  }
+});
+
+// Click on progress bar to seek
+document.getElementById('progressBar').addEventListener('click', (e) => {
+  if (!currentBuffer) return;
+  const rect = e.currentTarget.getBoundingClientRect();
+  const pct = (e.clientX - rect.left) / rect.width;
+  const seekTime = pct * currentBuffer.duration;
+  if (isPlaying) {
+    startPlayback(seekTime);
+  } else {
+    playOffset = seekTime;
+    document.getElementById('progressFill').style.width = (pct * 100) + '%';
+    document.getElementById('timeDisplay').textContent = formatTime(seekTime) + ' / ' + formatTime(currentBuffer.duration);
+  }
+});
+
+// ========== GENERATE ==========
+document.getElementById('generateBtn').addEventListener('click', async function() {
+  // 检查登录状态
+  if (!currentUser) {
+    openLogin();
+    return;
+  }
+
+  // 检查额度
+  const quotaCheck = await Quota.checkQuota(currentUser.id);
+  if (quotaCheck.error) {
+    alert('检查额度失败: ' + quotaCheck.error);
+    return;
+  }
+  if (!quotaCheck.hasQuota) {
+    if (confirm('今日额度已用完！是否升级到付费方案？')) {
+      location.href = 'signup.html?plan=starter';
+    }
+    return;
+  }
+
+  const btn = this;
+  if (btn.classList.contains('loading')) return;
+  btn.classList.add('loading');
+  btn.disabled = true;
+  stopPlayback();
+
+  const statusBar = document.getElementById('statusBar');
+  const statusText = document.getElementById('statusText');
+  statusBar.classList.add('generating');
+
+  const dur = parseInt(duration.value);
+  const bpmVal = parseInt(bpm.value);
+  const intensityVal = parseInt(intensity.value);
+  const complexityVal = parseInt(complexity.value);
+
+  const steps = ['分析风格特征...', '构建和声进行...', '编排节奏型...', '合成音色...', '混音处理...', '生成完成'];
+  let stepIdx = 0;
+  statusText.textContent = steps[0];
+  const stepInterval = setInterval(() => {
+    stepIdx++;
+    if (stepIdx < steps.length) statusText.textContent = steps[stepIdx];
+  }, 400);
+
+  setTimeout(async () => {
+    clearInterval(stepInterval);
+    try {
+      currentBuffer = generateMusic(selectedGenre, dur, bpmVal, intensityVal, complexityVal);
+      drawWaveform(currentBuffer);
+    } catch(e) {
+      console.error(e);
+      statusText.textContent = '生成出错，请重试';
+      btn.classList.remove('loading');
+      btn.disabled = false;
+      statusBar.classList.remove('generating');
+      return;
+    }
+
+    playOffset = 0;
+    document.getElementById('placeholder').style.display = 'none';
+    document.getElementById('waveformCanvas').style.display = 'block';
+    document.getElementById('playerControls').style.display = 'flex';
+    document.getElementById('exportRow').style.display = 'flex';
+    document.getElementById('timeDisplay').textContent = '0:00 / ' + formatTime(dur);
+
+    statusBar.classList.remove('generating');
+    statusText.textContent = '生成完成 — 点击播放试听';
+    btn.classList.remove('loading');
+    btn.disabled = false;
+
+    // 扣除额度
+    const useResult = await Quota.useQuota(currentUser.id);
+    if (useResult.success) {
+      statusText.textContent = `生成完成 — 剩余 ${useResult.remaining} 次额度`;
+    }
+    userProfile = await Auth.getProfile(currentUser.id);
+    updateQuotaDisplay();
+
+    // Save to history
+    const titles = ['午夜脉冲','星际漫游','城市之光','深海回响','破晓旋律','霓虹漫步','云端漫步','暗夜爵士','晨曦微光','流光溢彩'];
+    const title = titles[Math.floor(Math.random()*titles.length)];
+    const entry = {
+      id: Date.now(),
+      genre: selectedGenre,
+      title: title,
+      dur: dur,
+      bpm: bpmVal,
+      intensity: intensityVal,
+      complexity: complexityVal,
+      prompt: document.getElementById('promptInput').value.slice(0, 30),
+      time: new Date().toLocaleTimeString('zh-CN', {hour:'2-digit', minute:'2-digit'})
+    };
+    history.unshift(entry);
+    if (history.length > 20) history.pop();
+    localStorage.setItem('sf_history', JSON.stringify(history));
+    renderHistory();
+  }, 2500);
+});
+
+// ========== EXPORT ==========
+function exportAudio(format) {
+  if (!currentBuffer) return;
+  const ctx = new OfflineAudioContext(2, currentBuffer.length, currentBuffer.sampleRate);
+  const source = ctx.createBufferSource();
+  source.buffer = currentBuffer;
+  source.connect(ctx.destination);
+  source.start();
+  ctx.startRendering().then(rendered => {
+    const wav = bufferToWav(rendered);
+    const blob = new Blob([wav], { type: 'audio/wav' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `sonicforge_${selectedGenre}_${Date.now()}.wav`;
+    a.click();
+    URL.revokeObjectURL(url);
+    document.getElementById('statusText').textContent = '已导出 ' + format.toUpperCase() + ' 文件';
+  });
+}
+
+function bufferToWav(buffer) {
+  const numCh = buffer.numberOfChannels;
+  const sr = buffer.sampleRate;
+  const len = buffer.length;
+  const bytesPerSample = 2;
+  const blockAlign = numCh * bytesPerSample;
+  const byteRate = sr * blockAlign;
+  const dataSize = len * blockAlign;
+  const headerSize = 44;
+  const arrayBuffer = new ArrayBuffer(headerSize + dataSize);
+  const view = new DataView(arrayBuffer);
+
+  function writeStr(offset, str) { for (let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i)); }
+  writeStr(0, 'RIFF');
+  view.setUint32(4, 36 + dataSize, true);
+  writeStr(8, 'WAVE');
+  writeStr(12, 'fmt ');
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true);
+  view.setUint16(22, numCh, true);
+  view.setUint32(24, sr, true);
+  view.setUint32(28, byteRate, true);
+  view.setUint16(32, blockAlign, true);
+  view.setUint16(34, 16, true);
+  writeStr(36, 'data');
+  view.setUint32(40, dataSize, true);
+
+  let offset = 44;
+  for (let i = 0; i < len; i++) {
+    for (let ch = 0; ch < numCh; ch++) {
+      const sample = Math.max(-1, Math.min(1, buffer.getChannelData(ch)[i]));
+      view.setInt16(offset, sample < 0 ? sample * 0x8000 : sample * 0x7FFF, true);
+      offset += 2;
+    }
+  }
+  return arrayBuffer;
+}
+
+// ========== HISTORY ==========
+function renderHistory() {
+  const list = document.getElementById('historyList');
+  if (history.length === 0) {
+    list.innerHTML = '<div class="history-empty">还没有生成记录，开始创作吧</div>';
+    return;
+  }
+  list.innerHTML = history.map((h, i) => `
+    <div class="history-item" data-idx="${i}" onclick="loadHistory(${i})">
+      <span class="h-genre">${h.genre}</span>
+      <div class="h-info">
+        <div class="h-title">${h.title}</div>
+        <div class="h-meta">${h.time} · ${h.bpm}BPM</div>
+      </div>
+      <span class="h-dur">${formatTime(h.dur)}</span>
+      <button class="h-del" onclick="event.stopPropagation();deleteHistory(${i})" title="删除">×</button>
+    </div>
+  `).join('');
+}
+
+function loadHistory(idx) {
+  const h = history[idx];
+  if (!h) return;
+  // Set genre
+  const btn = document.querySelector(`[data-genre="${h.genre}"]`);
+  if (btn) {
+    document.querySelectorAll('.genre-opt').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    selectedGenre = h.genre;
+  }
+  // Set params
+  bpm.value = h.bpm; document.getElementById('bpmVal').textContent = h.bpm;
+  intensity.value = h.intensity; document.getElementById('intensityVal').textContent = h.intensity + '%';
+  complexity.value = h.complexity; document.getElementById('complexityVal').textContent = h.complexity + '%';
+  duration.value = h.dur; document.getElementById('durationVal').textContent = h.dur + 's';
+  if (h.prompt) document.getElementById('promptInput').value = h.prompt;
+  // Regenerate
+  stopPlayback();
+  currentBuffer = generateMusic(h.genre, h.dur, h.bpm, h.intensity, h.complexity);
+  drawWaveform(currentBuffer);
+  playOffset = 0;
+  document.getElementById('placeholder').style.display = 'none';
+  document.getElementById('waveformCanvas').style.display = 'block';
+  document.getElementById('playerControls').style.display = 'flex';
+  document.getElementById('exportRow').style.display = 'flex';
+  document.getElementById('timeDisplay').textContent = '0:00 / ' + formatTime(h.dur);
+  document.getElementById('statusText').textContent = '已加载历史记录: ' + h.title;
+}
+
+function deleteHistory(idx) {
+  history.splice(idx, 1);
+  localStorage.setItem('sf_history', JSON.stringify(history));
+  renderHistory();
+}
+
+// Init history on load
+renderHistory();
+</script>
+</body>
+</html>

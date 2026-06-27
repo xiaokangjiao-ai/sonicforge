@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SonicForge AI — API 文档</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Noto+Sans+SC:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#08080c;--bg2:#0e0e14;--bg3:#16161f;--text:#e8e6f0;--text2:#9896a8;--text3:#5c5a6e;--cyan:#00f0ff;--magenta:#ff2d8a;--amber:#ffb300;--lime:#a8ff00;--radius:16px;--radius-sm:10px;--font-display:'Outfit','Noto Sans SC',sans-serif;--font-body:'Noto Sans SC','Outfit',sans-serif;--font-mono:'JetBrains Mono',monospace}
+html{scroll-behavior:smooth;font-size:16px}
+body{background:var(--bg);color:var(--text);font-family:var(--font-body);overflow-x:hidden;line-height:1.6}
+::selection{background:var(--cyan);color:var(--bg)}
+a{color:inherit;text-decoration:none}
+
+.nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:16px 48px;display:flex;align-items:center;justify-content:space-between;backdrop-filter:blur(20px);background:rgba(8,8,12,.85);border-bottom:1px solid rgba(255,255,255,.04)}
+.nav-logo{font-family:var(--font-display);font-weight:800;font-size:1.3rem;display:flex;align-items:center;gap:10px;cursor:pointer}
+.nav-logo .dot{width:8px;height:8px;border-radius:50%;background:var(--cyan);box-shadow:0 0 10px var(--cyan)}
+.nav-back{padding:8px 20px;border-radius:100px;border:1px solid rgba(255,255,255,.12);background:transparent;color:var(--text2);font-size:.85rem;cursor:pointer;transition:all .2s;font-family:var(--font-body)}
+.nav-back:hover{border-color:var(--text);color:var(--text)}
+
+.api-page{padding:100px 48px 60px;max-width:1000px;margin:0 auto}
+.api-header{margin-bottom:48px}
+.api-header h1{font-family:var(--font-display);font-size:2.5rem;font-weight:800;letter-spacing:-.02em;margin-bottom:12px}
+.api-header p{color:var(--text2);font-size:1.05rem;max-width:600px}
+
+.api-layout{display:grid;grid-template-columns:200px 1fr;gap:48px}
+
+/* Sidebar nav */
+.api-nav{position:sticky;top:100px;align-self:start}
+.api-nav h3{font-family:var(--font-display);font-size:.8rem;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px}
+.api-nav ul{list-style:none;display:flex;flex-direction:column;gap:6px}
+.api-nav li a{display:block;padding:8px 12px;border-radius:6px;font-size:.85rem;color:var(--text2);transition:all .2s}
+.api-nav li a:hover{background:rgba(255,255,255,.03);color:var(--text)}
+.api-nav li a.active{background:rgba(0,240,255,.08);color:var(--cyan)}
+
+/* Content */
+.api-content{display:flex;flex-direction:column;gap:48px}
+.endpoint{background:var(--bg2);border:1px solid rgba(255,255,255,.05);border-radius:var(--radius);overflow:hidden}
+.endpoint-header{padding:24px;border-bottom:1px solid rgba(255,255,255,.05);display:flex;align-items:center;gap:12px}
+.method{padding:6px 12px;border-radius:6px;font-family:var(--font-mono);font-size:.75rem;font-weight:700;letter-spacing:.05em}
+.method.get{background:rgba(0,240,255,.12);color:var(--cyan)}
+.method.post{background:rgba(168,255,0,.12);color:var(--lime)}
+.method.delete{background:rgba(255,45,138,.12);color:var(--magenta)}
+.endpoint-path{font-family:var(--font-mono);font-size:.9rem;color:var(--text)}
+.endpoint-desc{padding:0 24px 24px;color:var(--text2);font-size:.9rem;line-height:1.7}
+
+/* Code blocks */
+.code-block{background:var(--bg);border:1px solid rgba(255,255,255,.05);border-radius:8px;padding:16px;margin:12px 0;font-family:var(--font-mono);font-size:.8rem;line-height:1.6;overflow-x:auto;color:var(--text2)}
+.code-block .key{color:var(--cyan)}
+.code-block .str{color:var(--lime)}
+.code-block .num{color:var(--amber)}
+.code-block .comment{color:var(--text3);font-style:italic}
+
+/* Params table */
+.params{margin:16px 0}
+.params h4{font-family:var(--font-display);font-size:.9rem;font-weight:600;margin-bottom:12px;color:var(--text2)}
+.param-row{display:grid;grid-template-columns:140px 80px 1fr;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.03);font-size:.85rem}
+.param-row:last-child{border-bottom:none}
+.param-name{font-family:var(--font-mono);color:var(--cyan)}
+.param-type{font-family:var(--font-mono);color:var(--text3);font-size:.75rem}
+.param-desc{color:var(--text2)}
+.param-required{color:var(--magenta);font-size:.7rem;margin-left:4px}
+
+/* Response example */
+.response{margin-top:16px}
+.response h4{font-family:var(--font-display);font-size:.9rem;font-weight:600;margin-bottom:8px;color:var(--text2)}
+.status{display:inline-block;padding:4px 10px;border-radius:4px;font-family:var(--font-mono);font-size:.75rem;font-weight:600;margin-right:8px}
+.status.s200{background:rgba(168,255,0,.1);color:var(--lime)}
+.status.s400{background:rgba(255,179,0,.1);color:var(--amber)}
+.status.s401{background:rgba(255,45,138,.1);color:var(--magenta)}
+
+@media(max-width:800px){
+  .api-page{padding:80px 20px 40px}
+  .api-layout{grid-template-columns:1fr}
+  .api-nav{position:static;display:none}
+  .nav{padding:14px 20px}
+  .param-row{grid-template-columns:1fr;gap:4px}
+}
+</style>
+</head>
+<body>
+<nav class="nav">
+  <div class="nav-logo" onclick="location.href='index.html'"><span class="dot"></span>SonicForge AI</div>
+  <button class="nav-back" onclick="history.back()">← 返回</button>
+</nav>
+
+<div class="api-page">
+  <div class="api-header">
+    <h1>API 文档</h1>
+    <p>通过 RESTful API 将 AI 音乐生成能力集成到你的应用中。所有接口支持 HTTPS，返回 JSON 格式。</p>
+  </div>
+
+  <div class="api-layout">
+    <nav class="api-nav">
+      <h3>快速开始</h3>
+      <ul>
+        <li><a href="#auth" class="active">认证</a></li>
+        <li><a href="#base">Base URL</a></li>
+      </ul>
+      <h3 style="margin-top:24px">音乐生成</h3>
+      <ul>
+        <li><a href="#generate">生成音乐</a></li>
+        <li><a href="#status">查询状态</a></li>
+        <li><a href="#download">下载音频</a></li>
+      </ul>
+      <h3 style="margin-top:24px">风格管理</h3>
+      <ul>
+        <li><a href="#genres">获取风格列表</a></li>
+        <li><a href="#genre-detail">风格详情</a></li>
+      </ul>
+      <h3 style="margin-top:24px">历史记录</h3>
+      <ul>
+        <li><a href="#history">生成历史</a></li>
+        <li><a href="#delete">删除记录</a></li>
+      </ul>
+    </nav>
+
+    <div class="api-content">
+      <!-- Auth -->
+      <div id="auth">
+        <h2 style="font-family:var(--font-display);font-size:1.5rem;font-weight:700;margin-bottom:16px">认证</h2>
+        <p style="color:var(--text2);font-size:.9rem;margin-bottom:16px">所有 API 请求需在 Header 中携带 API 密钥：</p>
+        <div class="code-block">
+<span class="key">Authorization</span>: Bearer YOUR_API_KEY
+        </div>
+        <p style="color:var(--text2);font-size:.85rem;margin-top:12px">API 密钥可在账户设置中生成。Pro 用户可创建多个密钥，Enterprise 用户可为团队成员分配独立密钥。</p>
+      </div>
+
+      <!-- Base URL -->
+      <div id="base">
+        <h2 style="font-family:var(--font-display);font-size:1.5rem;font-weight:700;margin-bottom:16px">Base URL</h2>
+        <div class="code-block">
+https://api.sonicforge.ai/v1
+        </div>
+      </div>
+
+      <!-- Generate -->
+      <div id="generate" class="endpoint">
+        <div class="endpoint-header">
+          <span class="method post">POST</span>
+          <span class="endpoint-path">/music/generate</span>
+        </div>
+        <div class="endpoint-desc">
+          <p>创建新的音乐生成任务。任务为异步执行，返回任务 ID 后可通过状态接口查询进度。</p>
+          
+          <div class="params">
+            <h4>请求参数</h4>
+            <div class="param-row">
+              <span class="param-name">genre<span class="param-required">*</span></span>
+              <span class="param-type">string</span>
+              <span class="param-desc">音乐风格，如 "electronic", "jazz", "classical"</span>
+            </div>
+            <div class="param-row">
+              <span class="param-name">bpm</span>
+              <span class="param-type">integer</span>
+              <span class="param-desc">速度（60-200），默认 120</span>
+            </div>
+            <div class="param-row">
+              <span class="param-name">intensity</span>
+              <span class="param-type">integer</span>
+              <span class="param-desc">情感强度（0-100），默认 60</span>
+            </div>
+            <div class="param-row">
+              <span class="param-name">complexity</span>
+              <span class="param-type">integer</span>
+              <span class="param-desc">复杂度（0-100），默认 50</span>
+            </div>
+            <div class="param-row">
+              <span class="param-name">duration</span>
+              <span class="param-type">integer</span>
+              <span class="param-desc">时长（秒，10-120），默认 30</span>
+            </div>
+            <div class="param-row">
+              <span class="param-name">prompt</span>
+              <span class="param-type">string</span>
+              <span class="param-desc">自然语言描述，如 "夜晚城市漫游的电子音乐"</span>
+            </div>
+            <div class="param-row">
+              <span class="param-name">format</span>
+              <span class="param-type">string</span>
+              <span class="param-desc">输出格式："mp3", "wav", "flac"，默认 "mp3"</span>
+            </div>
+          </div>
+
+          <h4 style="font-family:var(--font-display);font-size:.9rem;font-weight:600;margin:16px 0 8px;color:var(--text2)">请求示例</h4>
+          <div class="code-block">
+{
+  <span class="key">"genre"</span>: <span class="str">"electronic"</span>,
+  <span class="key">"bpm"</span>: <span class="num">128</span>,
+  <span class="key">"intensity"</span>: <span class="num">75</span>,
+  <span class="key">"complexity"</span>: <span class="num">60</span>,
+  <span class="key">"duration"</span>: <span class="num">45</span>,
+  <span class="key">"prompt"</span>: <span class="str">"深夜俱乐部的深邃浩室音乐，带有迷幻的合成器音色"</span>,
+  <span class="key">"format"</span>: <span class="str">"wav"</span>
+}
+          </div>
+
+          <div class="response">
+            <h4>响应示例</h4>
+            <span class="status s200">200 OK</span>
+            <div class="code-block">
+{
+  <span class="key">"task_id"</span>: <span class="str">"task_abc123xyz"</span>,
+  <span class="key">"status"</span>: <span class="str">"processing"</span>,
+  <span class="key">"estimated_time"</span>: <span class="num">8</span>,
+  <span class="key">"created_at"</span>: <span class="str">"2026-06-21T10:30:00Z"</span>
+}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Status -->
+      <div id="status" class="endpoint">
+        <div class="endpoint-header">
+          <span class="method get">GET</span>
+          <span class="endpoint-path">/music/status/{task_id}</span>
+        </div>
+        <div class="endpoint-desc">
+          <p>查询生成任务的状态。</p>
+          
+          <div class="response">
+            <h4>响应示例（处理中）</h4>
+            <span class="status s200">200 OK</span>
+            <div class="code-block">
+{
+  <span class="key">"task_id"</span>: <span class="str">"task_abc123xyz"</span>,
+  <span class="key">"status"</span>: <span class="str">"processing"</span>,
+  <span class="key">"progress"</span>: <span class="num">65</span>
+}
+            </div>
+
+            <h4 style="margin-top:16px">响应示例（完成）</h4>
+            <span class="status s200">200 OK</span>
+            <div class="code-block">
+{
+  <span class="key">"task_id"</span>: <span class="str">"task_abc123xyz"</span>,
+  <span class="key">"status"</span>: <span class="str">"completed"</span>,
+  <span class="key">"download_url"</span>: <span class="str">"https://api.sonicforge.ai/v1/music/download/task_abc123xyz"</span>,
+  <span class="key">"duration"</span>: <span class="num">45</span>,
+  <span class="key">"format"</span>: <span class="str">"wav"</span>,
+  <span class="key">"copyright_id"</span>: <span class="str">"cert_xyz789"</span>
+}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Download -->
+      <div id="download" class="endpoint">
+        <div class="endpoint-header">
+          <span class="method get">GET</span>
+          <span class="endpoint-path">/music/download/{task_id}</span>
+        </div>
+        <div class="endpoint-desc">
+          <p>下载已完成的音频文件。返回二进制音频数据。</p>
+          <p style="margin-top:8px"><strong>Headers:</strong> Content-Type: audio/wav (或 audio/mpeg, audio/flac)</p>
+          <p style="margin-top:8px;color:var(--text3);font-size:.85rem">下载链接有效期为 24 小时，过期后需重新获取。</p>
+        </div>
+      </div>
+
+      <!-- Genres -->
+      <div id="genres" class="endpoint">
+        <div class="endpoint-header">
+          <span class="method get">GET</span>
+          <span class="endpoint-path">/genres</span>
+        </div>
+        <div class="endpoint-desc">
+          <p>获取所有可用的音乐风格列表。</p>
+          
+          <div class="response">
+            <h4>响应示例</h4>
+            <span class="status s200">200 OK</span>
+            <div class="code-block">
+{
+  <span class="key">"genres"</span>: [
+    {
+      <span class="key">"id"</span>: <span class="str">"electronic"</span>,
+      <span class="key">"name"</span>: <span class="str">"Electronic"</span>,
+      <span class="key">"sub_genres"</span>: [<span class="str">"Deep House"</span>, <span class="str">"Techno"</span>, ...],
+      <span class="key">"bpm_range"</span>: [<span class="num">60</span>, <span class="num">180</span>]
+    },
+    ...
+  ]
+}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Genre Detail -->
+      <div id="genre-detail" class="endpoint">
+        <div class="endpoint-header">
+          <span class="method get">GET</span>
+          <span class="endpoint-path">/genres/{genre_id}</span>
+        </div>
+        <div class="endpoint-desc">
+          <p>获取指定风格的详细信息，包括子风格、推荐参数和示例。</p>
+        </div>
+      </div>
+
+      <!-- History -->
+      <div id="history" class="endpoint">
+        <div class="endpoint-header">
+          <span class="method get">GET</span>
+          <span class="endpoint-path">/history?page=1&limit=20</span>
+        </div>
+        <div class="endpoint-desc">
+          <p>获取生成历史记录，支持分页。</p>
+          
+          <div class="params">
+            <h4>查询参数</h4>
+            <div class="param-row">
+              <span class="param-name">page</span>
+              <span class="param-type">integer</span>
+              <span class="param-desc">页码，默认 1</span>
+            </div>
+            <div class="param-row">
+              <span class="param-name">limit</span>
+              <span class="param-type">integer</span>
+              <span class="param-desc">每页数量（1-100），默认 20</span>
+            </div>
+            <div class="param-row">
+              <span class="param-name">genre</span>
+              <span class="param-type">string</span>
+              <span class="param-desc">按风格筛选</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Delete -->
+      <div id="delete" class="endpoint">
+        <div class="endpoint-header">
+          <span class="method delete">DELETE</span>
+          <span class="endpoint-path">/history/{task_id}</span>
+        </div>
+        <div class="endpoint-desc">
+          <p>删除指定的生成记录。删除后无法恢复，下载链接将失效。</p>
+          
+          <div class="response">
+            <h4>响应</h4>
+            <span class="status s200">200 OK</span>
+            <div class="code-block">
+{ <span class="key">"success"</span>: <span class="num">true</span> }
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Rate Limits -->
+      <div style="background:var(--bg2);border:1px solid rgba(255,255,255,.05);border-radius:var(--radius);padding:24px">
+        <h2 style="font-family:var(--font-display);font-size:1.3rem;font-weight:700;margin-bottom:12px">速率限制</h2>
+        <p style="color:var(--text2);font-size:.9rem;line-height:1.7">API 调用受速率限制保护：</p>
+        <ul style="color:var(--text2);font-size:.9rem;line-height:1.8;margin:12px 0 0 20px">
+          <li><strong>Starter</strong>：10 次/分钟，30 次/小时</li>
+          <li><strong>Pro</strong>：60 次/分钟，1000 次/小时</li>
+          <li><strong>Enterprise</strong>：自定义限制</li>
+        </ul>
+        <p style="color:var(--text2);font-size:.85rem;margin-top:12px">超出限制时返回 <code style="background:var(--bg);padding:2px 6px;border-radius:4px;font-family:var(--font-mono);font-size:.8rem">429 Too Many Requests</code>，Header 中包含 <code style="background:var(--bg);padding:2px 6px;border-radius:4px;font-family:var(--font-mono);font-size:.8rem">Retry-After</code> 字段。</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer style="padding:40px 48px;border-top:1px solid rgba(255,255,255,.04);text-align:center;margin-top:40px">
+  <p style="font-size:.8rem;color:var(--text3);margin-bottom:12px">
+    <a href="index.html" style="color:var(--text2);margin:0 12px">首页</a>
+    <a href="studio.html" style="color:var(--text2);margin:0 12px">创作工作室</a>
+    <a href="community.html" style="color:var(--text2);margin:0 12px">创作者社区</a>
+    <a href="about.html" style="color:var(--text2);margin:0 12px">关于我们</a>
+  </p>
+  <p style="font-size:.75rem;color:var(--text3)">© 2026 SonicForge Technologies</p>
+</footer>
+
+<script>
+// Highlight active nav item on scroll
+const sections = document.querySelectorAll('[id]');
+const navLinks = document.querySelectorAll('.api-nav a');
+
+window.addEventListener('scroll', () => {
+  let current = '';
+  sections.forEach(section => {
+    const rect = section.getBoundingClientRect();
+    if (rect.top <= 150) current = section.id;
+  });
+  navLinks.forEach(link => {
+    link.classList.remove('active');
+    if (link.getAttribute('href') === '#' + current) link.classList.add('active');
+  });
+});
+</script>
+</body>
+</html>

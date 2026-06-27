@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SonicForge AI — 创作者社区</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Noto+Sans+SC:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#08080c;--bg2:#0e0e14;--bg3:#16161f;--text:#e8e6f0;--text2:#9896a8;--text3:#5c5a6e;--cyan:#00f0ff;--magenta:#ff2d8a;--amber:#ffb300;--lime:#a8ff00;--radius:16px;--radius-sm:10px;--font-display:'Outfit','Noto Sans SC',sans-serif;--font-body:'Noto Sans SC','Outfit',sans-serif;--font-mono:'JetBrains Mono',monospace}
+html{scroll-behavior:smooth;font-size:16px}
+body{background:var(--bg);color:var(--text);font-family:var(--font-body);overflow-x:hidden;line-height:1.6}
+::selection{background:var(--cyan);color:var(--bg)}
+a{color:inherit;text-decoration:none}
+
+.nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:16px 48px;display:flex;align-items:center;justify-content:space-between;backdrop-filter:blur(20px);background:rgba(8,8,12,.85);border-bottom:1px solid rgba(255,255,255,.04)}
+.nav-logo{font-family:var(--font-display);font-weight:800;font-size:1.3rem;display:flex;align-items:center;gap:10px;cursor:pointer}
+.nav-logo .dot{width:8px;height:8px;border-radius:50%;background:var(--cyan);box-shadow:0 0 10px var(--cyan)}
+.nav-links{display:flex;gap:24px;font-size:.85rem;font-weight:500;color:var(--text2)}
+.nav-links a{transition:color .2s}
+.nav-links a:hover{color:var(--text)}
+.nav-back{padding:8px 20px;border-radius:100px;border:1px solid rgba(255,255,255,.12);background:transparent;color:var(--text2);font-size:.85rem;cursor:pointer;transition:all .2s;font-family:var(--font-body)}
+.nav-back:hover{border-color:var(--text);color:var(--text)}
+
+.community{padding:100px 48px 60px;max-width:1200px;margin:0 auto}
+.community-header{text-align:center;margin-bottom:48px}
+.community-header h1{font-family:var(--font-display);font-size:2.5rem;font-weight:800;letter-spacing:-.02em;margin-bottom:12px}
+.community-header p{color:var(--text2);font-size:1.05rem;max-width:600px;margin:0 auto}
+
+/* Tabs */
+.tabs{display:flex;gap:0;justify-content:center;margin-bottom:40px;border-bottom:1px solid rgba(255,255,255,.06)}
+.tab{padding:12px 24px;font-size:.9rem;font-weight:500;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;background:none;border-top:none;border-left:none;border-right:none;font-family:var(--font-body)}
+.tab:hover{color:var(--text2)}
+.tab.active{color:var(--cyan);border-bottom-color:var(--cyan)}
+
+/* Stats */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:40px}
+.stat-card{background:var(--bg2);border:1px solid rgba(255,255,255,.05);border-radius:var(--radius);padding:20px;text-align:center}
+.stat-card .num{font-family:var(--font-display);font-size:2rem;font-weight:800;color:var(--cyan)}
+.stat-card .label{font-size:.8rem;color:var(--text3);margin-top:4px}
+
+/* Marketplace grid */
+.market-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:20px;margin-bottom:48px}
+.market-card{background:var(--bg2);border:1px solid rgba(255,255,255,.05);border-radius:var(--radius);overflow:hidden;cursor:pointer;transition:all .3s}
+.market-card:hover{transform:translateY(-3px);border-color:rgba(255,255,255,.1)}
+.market-cover{height:140px;background:linear-gradient(135deg,var(--bg3),var(--bg));display:flex;align-items:center;justify-content:center;position:relative}
+.market-cover .icon{font-size:3rem;opacity:.5}
+.market-cover .badge{position:absolute;top:12px;right:12px;padding:4px 10px;border-radius:4px;font-size:.7rem;font-family:var(--font-mono);font-weight:600}
+.badge.free{background:rgba(168,255,0,.15);color:var(--lime)}
+.badge.paid{background:rgba(255,179,0,.15);color:var(--amber)}
+.market-info{padding:16px}
+.market-info h3{font-family:var(--font-display);font-size:1rem;font-weight:600;margin-bottom:4px}
+.market-info .meta{font-size:.8rem;color:var(--text3);margin-bottom:8px}
+.market-info .footer{display:flex;justify-content:space-between;align-items:center}
+.market-info .author{font-size:.75rem;color:var(--text2)}
+.market-info .price{font-family:var(--font-mono);font-size:.85rem;font-weight:600;color:var(--amber)}
+
+/* Creators */
+.creators-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;margin-bottom:48px}
+.creator-card{background:var(--bg2);border:1px solid rgba(255,255,255,.05);border-radius:var(--radius);padding:24px;text-align:center;transition:all .3s}
+.creator-card:hover{transform:translateY(-2px);border-color:rgba(255,255,255,.1)}
+.creator-avatar{width:64px;height:64px;border-radius:50%;background:var(--bg3);margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:1.5rem}
+.creator-card h4{font-family:var(--font-display);font-size:.95rem;font-weight:600;margin-bottom:4px}
+.creator-card .role{font-size:.75rem;color:var(--text3);margin-bottom:8px}
+.creator-card .stats{font-size:.75rem;color:var(--text2)}
+
+/* CTA */
+.community-cta{text-align:center;padding:48px;background:var(--bg2);border-radius:var(--radius);border:1px solid rgba(255,255,255,.05)}
+.community-cta h2{font-family:var(--font-display);font-size:1.6rem;font-weight:700;margin-bottom:8px}
+.community-cta p{color:var(--text2);font-size:.95rem;margin-bottom:20px}
+.community-cta .btn{padding:14px 36px;border-radius:100px;background:linear-gradient(135deg,var(--cyan),#00b4d8);color:var(--bg);font-weight:700;border:none;cursor:pointer;font-family:var(--font-body);font-size:.95rem;transition:all .3s}
+.community-cta .btn:hover{box-shadow:0 8px 30px rgba(0,240,255,.3);transform:translateY(-2px)}
+
+@media(max-width:700px){
+  .community{padding:80px 20px 40px}
+  .stats-row{grid-template-columns:1fr 1fr}
+  .nav{padding:14px 20px}
+  .nav-links{display:none}
+}
+</style>
+</head>
+<body>
+<nav class="nav">
+  <div class="nav-logo" onclick="location.href='index.html'"><span class="dot"></span>SonicForge AI</div>
+  <div class="nav-links">
+    <a href="#market">素材市场</a>
+    <a href="#creators">创作者</a>
+  </div>
+  <button class="nav-back" onclick="location.href='index.html'">← 返回首页</button>
+</nav>
+
+<div class="community">
+  <div class="community-header">
+    <h1>创作者社区</h1>
+    <p>发现、分享和交易 AI 生成的音乐素材。与全球创作者一起构建音乐生态。</p>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card"><div class="num">12,847</div><div class="label">创作者</div></div>
+    <div class="stat-card"><div class="num">58,293</div><div class="label">作品数量</div></div>
+    <div class="stat-card"><div class="num">1.2M</div><div class="label">总下载量</div></div>
+    <div class="stat-card"><div class="num">¥3.8M</div><div class="label">创作者收入</div></div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('market',this)">素材市场</button>
+    <button class="tab" onclick="switchTab('creators',this)">热门创作者</button>
+  </div>
+
+  <div id="market">
+    <div class="market-grid">
+      <div class="market-card">
+        <div class="market-cover"><span class="icon">🎹</span><span class="badge free">免费</span></div>
+        <div class="market-info">
+          <h3>Midnight Jazz Piano</h3>
+          <div class="meta">Jazz · 92 BPM · Am</div>
+          <div class="footer"><span class="author">@jazzmaster</span><span class="price">免费</span></div>
+        </div>
+      </div>
+      <div class="market-card">
+        <div class="market-cover"><span class="icon">⚡</span><span class="badge paid">¥19</span></div>
+        <div class="market-info">
+          <h3>Cyberpunk Bass Pack</h3>
+          <div class="meta">Electronic · 140 BPM · Fm</div>
+          <div class="footer"><span class="author">@basslab</span><span class="price">¥19</span></div>
+        </div>
+      </div>
+      <div class="market-card">
+        <div class="market-cover"><span class="icon">🌙</span><span class="badge free">免费</span></div>
+        <div class="market-info">
+          <h3>Rainy Day Lo-Fi</h3>
+          <div class="meta">Lo-Fi · 78 BPM · Fm</div>
+          <div class="footer"><span class="author">@chillbeats</span><span class="price">免费</span></div>
+        </div>
+      </div>
+      <div class="market-card">
+        <div class="market-cover"><span class="icon">🎬</span><span class="badge paid">¥29</span></div>
+        <div class="market-info">
+          <h3>Epic Orchestra Vol.3</h3>
+          <div class="meta">Cinematic · 90 BPM · Dm</div>
+          <div class="footer"><span class="author">@filmmusic</span><span class="price">¥29</span></div>
+        </div>
+      </div>
+      <div class="market-card">
+        <div class="market-cover"><span class="icon">🎤</span><span class="badge paid">¥15</span></div>
+        <div class="market-info">
+          <h3>Trap Drum Kit</h3>
+          <div class="meta">Hip-Hop · 145 BPM · Cm</div>
+          <div class="footer"><span class="author">@drumgod</span><span class="price">¥15</span></div>
+        </div>
+      </div>
+      <div class="market-card">
+        <div class="market-cover"><span class="icon">🌊</span><span class="badge free">免费</span></div>
+        <div class="market-info">
+          <h3>Ocean Meditation</h3>
+          <div class="meta">Ambient · 自由速度 · C</div>
+          <div class="footer"><span class="author">@zenmaster</span><span class="price">免费</span></div>
+        </div>
+      </div>
+      <div class="market-card">
+        <div class="market-cover"><span class="icon">🎵</span><span class="badge paid">¥12</span></div>
+        <div class="market-info">
+          <h3>Summer Pop Vibes</h3>
+          <div class="meta">Pop · 122 BPM · G Major</div>
+          <div class="footer"><span class="author">@popcraft</span><span class="price">¥12</span></div>
+        </div>
+      </div>
+      <div class="market-card">
+        <div class="market-cover"><span class="icon">🎻</span><span class="badge paid">¥25</span></div>
+        <div class="market-info">
+          <h3>Classical Strings</h3>
+          <div class="meta">Classical · 72 BPM · D Major</div>
+          <div class="footer"><span class="author">@stringspro</span><span class="price">¥25</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="creators" style="display:none">
+    <div class="creators-grid">
+      <div class="creator-card">
+        <div class="creator-avatar">🎹</div>
+        <h4>@jazzmaster</h4>
+        <div class="role">Jazz Specialist</div>
+        <div class="stats">142 作品 · 8.2K 下载</div>
+      </div>
+      <div class="creator-card">
+        <div class="creator-avatar">⚡</div>
+        <h4>@basslab</h4>
+        <div class="role">Electronic Producer</div>
+        <div class="stats">89 作品 · 12.5K 下载</div>
+      </div>
+      <div class="creator-card">
+        <div class="creator-avatar">🌙</div>
+        <h4>@chillbeats</h4>
+        <div class="role">Lo-Fi Creator</div>
+        <div class="stats">234 作品 · 25.1K 下载</div>
+      </div>
+      <div class="creator-card">
+        <div class="creator-avatar">🎬</div>
+        <h4>@filmmusic</h4>
+        <div class="role">Cinematic Composer</div>
+        <div class="stats">67 作品 · 6.8K 下载</div>
+      </div>
+      <div class="creator-card">
+        <div class="creator-avatar">🎤</div>
+        <h4>@drumgod</h4>
+        <div class="role">Hip-Hop Producer</div>
+        <div class="stats">156 作品 · 18.3K 下载</div>
+      </div>
+      <div class="creator-card">
+        <div class="creator-avatar">🌊</div>
+        <h4>@zenmaster</h4>
+        <div class="role">Ambient Soundscape</div>
+        <div class="stats">98 作品 · 9.7K 下载</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="community-cta">
+    <h2>开始分享你的作品</h2>
+    <p>上传你的 AI 生成音乐，赚取收入，建立你的创作者品牌。</p>
+    <button class="btn" onclick="location.href='signup.html?plan=pro'">成为创作者</button>
+  </div>
+</div>
+
+<!-- Modal -->
+<div id="modal" style="display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.7);backdrop-filter:blur(8px);align-items:center;justify-content:center">
+  <div style="background:var(--bg2);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:36px;max-width:480px;width:90%;position:relative">
+    <button onclick="closeModal()" style="position:absolute;top:16px;right:16px;background:none;border:none;color:var(--text3);font-size:1.2rem;cursor:pointer">×</button>
+    <div id="modalContent"></div>
+  </div>
+</div>
+
+<footer style="padding:40px 48px;border-top:1px solid rgba(255,255,255,.04);text-align:center;margin-top:40px">
+  <p style="font-size:.8rem;color:var(--text3);margin-bottom:12px">
+    <a href="index.html" style="color:var(--text2);margin:0 12px">首页</a>
+    <a href="studio.html" style="color:var(--text2);margin:0 12px">创作工作室</a>
+    <a href="demo.html" style="color:var(--text2);margin:0 12px">产品演示</a>
+    <a href="api.html" style="color:var(--text2);margin:0 12px">API 文档</a>
+    <a href="about.html" style="color:var(--text2);margin:0 12px">关于我们</a>
+  </p>
+  <p style="font-size:.75rem;color:var(--text3)">© 2026 SonicForge Technologies</p>
+</footer>
+
+<script>
+function switchTab(tab, btn) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('market').style.display = tab === 'market' ? 'block' : 'none';
+  document.getElementById('creators').style.display = tab === 'creators' ? 'block' : 'none';
+}
+
+// Modal functions
+function openModal(html) {
+  document.getElementById('modalContent').innerHTML = html;
+  document.getElementById('modal').style.display = 'flex';
+}
+function closeModal() {
+  document.getElementById('modal').style.display = 'none';
+}
+document.getElementById('modal').addEventListener('click', (e) => {
+  if (e.target === e.currentTarget) closeModal();
+});
+
+// Market card clicks
+document.querySelectorAll('.market-card').forEach(card => {
+  card.addEventListener('click', () => {
+    const title = card.querySelector('h3').textContent;
+    const meta = card.querySelector('.meta').textContent;
+    const author = card.querySelector('.author').textContent;
+    const price = card.querySelector('.price').textContent;
+    const badge = card.querySelector('.badge');
+    const isPaid = badge.classList.contains('paid');
+    openModal(`
+      <h2 style="font-family:var(--font-display);font-size:1.4rem;font-weight:700;margin-bottom:8px">${title}</h2>
+      <p style="color:var(--text2);font-size:.9rem;margin-bottom:16px">${meta}</p>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+        <span style="color:var(--text3);font-size:.85rem">作者: ${author}</span>
+        <span style="font-family:var(--font-mono);font-size:1.1rem;font-weight:700;color:var(--amber)">${price}</span>
+      </div>
+      <p style="color:var(--text2);font-size:.85rem;line-height:1.7;margin-bottom:20px">
+        这是一个由 AI 生成的高质量音乐素材，可用于商业项目。${isPaid ? '购买后获得完整使用权和版权证书。' : '免费素材，可直接使用。'}
+      </p>
+      <div style="display:flex;gap:12px">
+        <button onclick="closeModal();location.href='studio.html'" style="flex:1;padding:12px;border-radius:8px;background:linear-gradient(135deg,var(--cyan),#00b4d8);color:var(--bg);font-weight:600;border:none;cursor:pointer;font-family:var(--font-body)">
+          ${isPaid ? '购买并下载' : '免费下载'}
+        </button>
+        <button onclick="closeModal()" style="padding:12px 20px;border-radius:8px;border:1px solid rgba(255,255,255,.1);background:transparent;color:var(--text2);cursor:pointer;font-family:var(--font-body)">关闭</button>
+      </div>
+    `);
+  });
+});
+
+// Creator card clicks
+document.querySelectorAll('.creator-card').forEach(card => {
+  card.addEventListener('click', () => {
+    const name = card.querySelector('h4').textContent;
+    const role = card.querySelector('.role').textContent;
+    const stats = card.querySelector('.stats').textContent;
+    const avatar = card.querySelector('.creator-avatar').textContent;
+    openModal(`
+      <div style="text-align:center">
+        <div style="width:80px;height:80px;border-radius:50%;background:var(--bg3);margin:0 auto 16px;display:flex;align-items:center;justify-content:center;font-size:2.5rem">${avatar}</div>
+        <h2 style="font-family:var(--font-display);font-size:1.4rem;font-weight:700;margin-bottom:4px">${name}</h2>
+        <p style="color:var(--cyan);font-size:.9rem;margin-bottom:8px">${role}</p>
+        <p style="color:var(--text3);font-size:.85rem;margin-bottom:20px">${stats}</p>
+        <p style="color:var(--text2);font-size:.9rem;line-height:1.7;margin-bottom:20px">
+          专注于 ${role.toLowerCase()} 领域，擅长创作富有情感和律动感的音乐作品。所有作品均通过 SonicForge AI 生成并经过精心调整。
+        </p>
+        <div style="display:flex;gap:12px">
+          <button onclick="closeModal();location.href='studio.html'" style="flex:1;padding:12px;border-radius:8px;background:var(--cyan);color:var(--bg);font-weight:600;border:none;cursor:pointer;font-family:var(--font-body)">关注</button>
+          <button onclick="closeModal()" style="padding:12px 20px;border-radius:8px;border:1px solid rgba(255,255,255,.1);background:transparent;color:var(--text2);cursor:pointer;font-family:var(--font-body)">关闭</button>
+        </div>
+      </div>
+    `);
+  });
+});
+</script>
+</body>
+</html>

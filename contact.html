@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SonicForge AI — 联系销售</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Noto+Sans+SC:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#08080c;--bg2:#0e0e14;--bg3:#16161f;--text:#e8e6f0;--text2:#9896a8;--text3:#5c5a6e;--cyan:#00f0ff;--magenta:#ff2d8a;--amber:#ffb300;--lime:#a8ff00;--radius:16px;--radius-sm:10px;--font-display:'Outfit','Noto Sans SC',sans-serif;--font-body:'Noto Sans SC','Outfit',sans-serif;--font-mono:'JetBrains Mono',monospace}
+html{scroll-behavior:smooth;font-size:16px}
+body{background:var(--bg);color:var(--text);font-family:var(--font-body);overflow-x:hidden;line-height:1.6}
+::selection{background:var(--cyan);color:var(--bg)}
+a{color:inherit;text-decoration:none}
+
+.nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:16px 48px;display:flex;align-items:center;justify-content:space-between;backdrop-filter:blur(20px);background:rgba(8,8,12,.85);border-bottom:1px solid rgba(255,255,255,.04)}
+.nav-logo{font-family:var(--font-display);font-weight:800;font-size:1.3rem;display:flex;align-items:center;gap:10px;cursor:pointer}
+.nav-logo .dot{width:8px;height:8px;border-radius:50%;background:var(--cyan);box-shadow:0 0 10px var(--cyan)}
+.nav-back{padding:8px 20px;border-radius:100px;border:1px solid rgba(255,255,255,.12);background:transparent;color:var(--text2);font-size:.85rem;cursor:pointer;transition:all .2s;font-family:var(--font-body)}
+.nav-back:hover{border-color:var(--text);color:var(--text)}
+
+.contact{padding:100px 48px 60px;max-width:800px;margin:0 auto}
+.contact-header{text-align:center;margin-bottom:48px}
+.contact-header h1{font-family:var(--font-display);font-size:2.2rem;font-weight:800;letter-spacing:-.02em;margin-bottom:12px}
+.contact-header p{color:var(--text2);font-size:1rem;max-width:500px;margin:0 auto}
+
+.contact-layout{display:grid;grid-template-columns:1fr 280px;gap:40px}
+
+.form-area{display:flex;flex-direction:column;gap:24px}
+.form-group{display:flex;flex-direction:column;gap:6px}
+.form-group label{font-size:.85rem;color:var(--text2);font-weight:500}
+.form-group input,.form-group select,.form-group textarea{padding:14px 16px;border-radius:8px;border:1px solid rgba(255,255,255,.08);background:var(--bg2);color:var(--text);font-size:.9rem;font-family:var(--font-body);outline:none;transition:border-color .2s}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--cyan)}
+.form-group input::placeholder,.form-group textarea::placeholder{color:var(--text3)}
+.form-group textarea{min-height:120px;resize:vertical}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+
+.checkbox-group{display:flex;align-items:start;gap:10px;font-size:.85rem;color:var(--text2)}
+.checkbox-group input[type="checkbox"]{margin-top:3px;accent-color:var(--cyan)}
+
+.submit-btn{padding:16px;border-radius:var(--radius-sm);background:linear-gradient(135deg,var(--cyan),#00b4d8);color:var(--bg);font-weight:700;font-size:1rem;border:none;cursor:pointer;transition:all .3s;font-family:var(--font-body)}
+.submit-btn:hover{box-shadow:0 8px 30px rgba(0,240,255,.3);transform:translateY(-1px)}
+
+/* Sidebar */
+.sidebar{display:flex;flex-direction:column;gap:20px}
+.info-card{background:var(--bg2);border:1px solid rgba(255,255,255,.05);border-radius:var(--radius);padding:24px}
+.info-card h3{font-family:var(--font-display);font-size:.9rem;font-weight:600;margin-bottom:12px;color:var(--text2);text-transform:uppercase;letter-spacing:.08em}
+.info-card .item{display:flex;align-items:center;gap:10px;padding:8px 0;font-size:.85rem;color:var(--text2)}
+.info-card .item .icon{font-size:1.1rem}
+.info-card .item strong{color:var(--text);font-weight:500}
+
+.enterprise-features{background:var(--bg2);border:1px solid rgba(0,240,255,.1);border-radius:var(--radius);padding:24px}
+.enterprise-features h3{font-family:var(--font-display);font-size:.9rem;font-weight:600;margin-bottom:12px;color:var(--cyan);text-transform:uppercase;letter-spacing:.08em}
+.enterprise-features ul{list-style:none;display:flex;flex-direction:column;gap:8px}
+.enterprise-features li{font-size:.85rem;color:var(--text2);display:flex;align-items:center;gap:8px}
+.enterprise-features li::before{content:'✓';color:var(--cyan);font-weight:700;font-size:.75rem}
+
+/* Success */
+.success-msg{display:none;text-align:center;padding:48px 24px}
+.success-msg .icon{font-size:4rem;margin-bottom:16px}
+.success-msg h2{font-family:var(--font-display);font-size:1.6rem;font-weight:700;margin-bottom:8px}
+.success-msg p{color:var(--text2);font-size:.95rem}
+
+@media(max-width:700px){
+  .contact{padding:80px 20px 40px}
+  .contact-layout{grid-template-columns:1fr}
+  .form-row{grid-template-columns:1fr}
+  .nav{padding:14px 20px}
+}
+</style>
+</head>
+<body>
+<nav class="nav">
+  <div class="nav-logo" onclick="location.href='index.html'"><span class="dot"></span>SonicForge AI</div>
+  <a href="index.html"><button class="nav-back">← 返回首页</button></a>
+</nav>
+
+<div class="contact">
+  <div class="contact-header">
+    <h1>联系销售团队</h1>
+    <p>Enterprise 方案为企业客户提供定制化 AI 音乐解决方案，我们的销售团队将在 24 小时内与你联系。</p>
+  </div>
+
+  <div class="contact-layout">
+    <div class="form-area" id="formArea">
+      <div class="form-row">
+        <div class="form-group">
+          <label>姓名 *</label>
+          <input type="text" placeholder="你的姓名" id="name">
+        </div>
+        <div class="form-group">
+          <label>职位</label>
+          <input type="text" placeholder="你的职位" id="title">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>公司名称 *</label>
+          <input type="text" placeholder="公司/组织名称" id="company">
+        </div>
+        <div class="form-group">
+          <label>公司规模</label>
+          <select id="size">
+            <option>1-10 人</option>
+            <option>11-50 人</option>
+            <option>51-200 人</option>
+            <option>201-1000 人</option>
+            <option>1000+ 人</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>工作邮箱 *</label>
+          <input type="email" placeholder="work@company.com" id="email">
+        </div>
+        <div class="form-group">
+          <label>电话</label>
+          <input type="tel" placeholder="+86 ..." id="phone">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>行业</label>
+        <select id="industry">
+          <option>影视制作</option>
+          <option>游戏开发</option>
+          <option>广告营销</option>
+          <option>音乐/娱乐</option>
+          <option>教育</option>
+          <option>科技/互联网</option>
+          <option>其他</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>需求描述</label>
+        <textarea placeholder="请描述你的使用场景、预期用量和特殊需求..." id="needs"></textarea>
+      </div>
+
+      <div class="checkbox-group">
+        <input type="checkbox" id="agree">
+        <label for="agree">我同意 SonicForge AI 根据我提供的信息与我联系，并已阅读<a href="#" style="color:var(--cyan)">隐私政策</a>。</label>
+      </div>
+
+      <button class="submit-btn" onclick="submitForm()">提交咨询</button>
+    </div>
+
+    <div class="sidebar">
+      <div class="info-card">
+        <h3>联系方式</h3>
+        <div class="item"><span class="icon">📧</span><span>sales@sonicforge.ai</span></div>
+        <div class="item"><span class="icon">📞</span><span>400-888-SONIC</span></div>
+        <div class="item"><span class="icon">🕐</span><span>周一至周五 9:00-18:00</span></div>
+      </div>
+
+      <div class="enterprise-features">
+        <h3>Enterprise 权益</h3>
+        <ul>
+          <li>无限生成额度</li>
+          <li>私有化部署</li>
+          <li>模型微调定制</li>
+          <li>专属技术支持</li>
+          <li>SLA 99.9% 保障</li>
+          <li>优先新功能体验</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="success-msg" id="successMsg">
+    <div class="icon">✅</div>
+    <h2>提交成功！</h2>
+    <p>我们的销售团队将在 24 小时内通过邮件与你联系。</p>
+  </div>
+</div>
+
+<footer style="padding:40px 48px;border-top:1px solid rgba(255,255,255,.04);text-align:center;margin-top:40px">
+  <p style="font-size:.8rem;color:var(--text3);margin-bottom:12px">
+    <a href="index.html" style="color:var(--text2);margin:0 12px">首页</a>
+    <a href="studio.html" style="color:var(--text2);margin:0 12px">创作工作室</a>
+    <a href="community.html" style="color:var(--text2);margin:0 12px">创作者社区</a>
+    <a href="api.html" style="color:var(--text2);margin:0 12px">API 文档</a>
+    <a href="about.html" style="color:var(--text2);margin:0 12px">关于我们</a>
+  </p>
+  <p style="font-size:.75rem;color:var(--text3)">© 2026 SonicForge Technologies</p>
+</footer>
+
+<script>
+function submitForm() {
+  const name = document.getElementById('name').value.trim();
+  const company = document.getElementById('company').value.trim();
+  const email = document.getElementById('email').value.trim();
+  const agree = document.getElementById('agree').checked;
+
+  if (!name) { alert('请填写姓名'); return; }
+  if (!company) { alert('请填写公司名称'); return; }
+  if (!email) { alert('请填写工作邮箱'); return; }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { alert('邮箱格式不正确'); return; }
+  if (!agree) { alert('请先同意隐私政策'); return; }
+
+  document.getElementById('formArea').style.display = 'none';
+  document.querySelector('.sidebar').style.display = 'none';
+  document.getElementById('successMsg').style.display = 'block';
+}
+</script>
+</body>
+</html>

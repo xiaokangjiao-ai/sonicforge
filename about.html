@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SonicForge AI — 关于我们</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Noto+Sans+SC:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#08080c;--bg2:#0e0e14;--bg3:#16161f;--text:#e8e6f0;--text2:#9896a8;--text3:#5c5a6e;--cyan:#00f0ff;--magenta:#ff2d8a;--amber:#ffb300;--lime:#a8ff00;--radius:16px;--radius-sm:10px;--font-display:'Outfit','Noto Sans SC',sans-serif;--font-body:'Noto Sans SC','Outfit',sans-serif;--font-mono:'JetBrains Mono',monospace}
+html{scroll-behavior:smooth;font-size:16px}
+body{background:var(--bg);color:var(--text);font-family:var(--font-body);overflow-x:hidden;line-height:1.6}
+::selection{background:var(--cyan);color:var(--bg)}
+a{color:inherit;text-decoration:none}
+
+.nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:16px 48px;display:flex;align-items:center;justify-content:space-between;backdrop-filter:blur(20px);background:rgba(8,8,12,.85);border-bottom:1px solid rgba(255,255,255,.04)}
+.nav-logo{font-family:var(--font-display);font-weight:800;font-size:1.3rem;display:flex;align-items:center;gap:10px;cursor:pointer}
+.nav-logo .dot{width:8px;height:8px;border-radius:50%;background:var(--cyan);box-shadow:0 0 10px var(--cyan)}
+.nav-back{padding:8px 20px;border-radius:100px;border:1px solid rgba(255,255,255,.12);background:transparent;color:var(--text2);font-size:.85rem;cursor:pointer;transition:all .2s;font-family:var(--font-body)}
+.nav-back:hover{border-color:var(--text);color:var(--text)}
+
+.about{padding:100px 48px 60px;max-width:1000px;margin:0 auto}
+.about-header{text-align:center;margin-bottom:64px}
+.about-header h1{font-family:var(--font-display);font-size:2.8rem;font-weight:800;letter-spacing:-.02em;margin-bottom:16px}
+.about-header p{color:var(--text2);font-size:1.1rem;max-width:600px;margin:0 auto;line-height:1.8}
+
+/* Mission */
+.mission{background:var(--bg2);border:1px solid rgba(255,255,255,.05);border-radius:var(--radius);padding:48px;margin-bottom:48px;text-align:center}
+.mission h2{font-family:var(--font-display);font-size:1.8rem;font-weight:700;margin-bottom:16px;color:var(--cyan)}
+.mission p{color:var(--text2);font-size:1rem;line-height:1.8;max-width:700px;margin:0 auto}
+
+/* Timeline */
+.timeline{margin-bottom:48px}
+.timeline h2{font-family:var(--font-display);font-size:1.6rem;font-weight:700;margin-bottom:32px;text-align:center}
+.timeline-items{position:relative;padding-left:40px}
+.timeline-items::before{content:'';position:absolute;left:15px;top:0;bottom:0;width:2px;background:rgba(255,255,255,.06)}
+.timeline-item{position:relative;margin-bottom:32px}
+.timeline-item::before{content:'';position:absolute;left:-29px;top:8px;width:12px;height:12px;border-radius:50%;background:var(--cyan);box-shadow:0 0 10px var(--cyan)}
+.timeline-item .year{font-family:var(--font-mono);font-size:.8rem;color:var(--cyan);margin-bottom:4px}
+.timeline-item h3{font-family:var(--font-display);font-size:1.1rem;font-weight:600;margin-bottom:4px}
+.timeline-item p{color:var(--text2);font-size:.9rem;line-height:1.7}
+
+/* Team */
+.team{margin-bottom:48px}
+.team h2{font-family:var(--font-display);font-size:1.6rem;font-weight:700;margin-bottom:32px;text-align:center}
+.team-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:20px}
+.team-card{background:var(--bg2);border:1px solid rgba(255,255,255,.05);border-radius:var(--radius);padding:28px;text-align:center;transition:all .3s}
+.team-card:hover{transform:translateY(-3px);border-color:rgba(255,255,255,.1)}
+.team-avatar{width:80px;height:80px;border-radius:50%;background:var(--bg3);margin:0 auto 16px;display:flex;align-items:center;justify-content:center;font-size:2rem}
+.team-card h3{font-family:var(--font-display);font-size:1.1rem;font-weight:600;margin-bottom:4px}
+.team-card .role{font-size:.85rem;color:var(--cyan);margin-bottom:8px}
+.team-card .bio{font-size:.8rem;color:var(--text3);line-height:1.6}
+
+/* Values */
+.values{margin-bottom:48px}
+.values h2{font-family:var(--font-display);font-size:1.6rem;font-weight:700;margin-bottom:32px;text-align:center}
+.values-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px}
+.value-card{background:var(--bg2);border:1px solid rgba(255,255,255,.05);border-radius:var(--radius);padding:28px}
+.value-card .icon{font-size:2rem;margin-bottom:12px}
+.value-card h3{font-family:var(--font-display);font-size:1.1rem;font-weight:600;margin-bottom:8px}
+.value-card p{color:var(--text2);font-size:.9rem;line-height:1.7}
+
+/* Contact */
+.contact-cta{text-align:center;padding:48px;background:var(--bg2);border-radius:var(--radius);border:1px solid rgba(255,255,255,.05)}
+.contact-cta h2{font-family:var(--font-display);font-size:1.6rem;font-weight:700;margin-bottom:8px}
+.contact-cta p{color:var(--text2);font-size:.95rem;margin-bottom:20px}
+.contact-cta .btn{padding:14px 36px;border-radius:100px;background:linear-gradient(135deg,var(--cyan),#00b4d8);color:var(--bg);font-weight:700;border:none;cursor:pointer;font-family:var(--font-body);font-size:.95rem;transition:all .3s}
+.contact-cta .btn:hover{box-shadow:0 8px 30px rgba(0,240,255,.3);transform:translateY(-2px)}
+
+@media(max-width:700px){
+  .about{padding:80px 20px 40px}
+  .about-header h1{font-size:2rem}
+  .mission{padding:32px 20px}
+  .nav{padding:14px 20px}
+}
+</style>
+</head>
+<body>
+<nav class="nav">
+  <div class="nav-logo" onclick="location.href='index.html'"><span class="dot"></span>SonicForge AI</div>
+  <button class="nav-back" onclick="location.href='index.html'">← 返回首页</button>
+</nav>
+
+<div class="about">
+  <div class="about-header">
+    <h1>关于 SonicForge AI</h1>
+    <p>我们是一支由音乐家、AI 研究者和工程师组成的团队，致力于用人工智能重新定义音乐创作。</p>
+  </div>
+
+  <div class="mission">
+    <h2>我们的使命</h2>
+    <p>让每一个人都能创作出专业级的音乐。无论你是专业音乐人、影视工作者、游戏开发者，还是音乐爱好者，SonicForge AI 都能将你的创意转化为现实。我们相信，AI 不是取代创作者，而是赋能创作者。</p>
+  </div>
+
+  <div class="timeline">
+    <h2>发展历程</h2>
+    <div class="timeline-items">
+      <div class="timeline-item">
+        <div class="year">2023</div>
+        <h3>项目启动</h3>
+        <p>三位联合创始人（音乐家 + AI 研究者 + 工程师）在上海成立 SonicForge Technologies，开始研发音乐生成 AI 模型。</p>
+      </div>
+      <div class="timeline-item">
+        <div class="year">2024</div>
+        <h3>Alpha 版本发布</h3>
+        <p>首个内部测试版本上线，支持 8 种基础风格生成。获得种子轮融资 500 万美元。</p>
+      </div>
+      <div class="timeline-item">
+        <div class="year">2025</div>
+        <h3>公测与社区建设</h3>
+        <p>开放公测，用户突破 10 万。推出创作者社区和素材市场，建立生态闭环。</p>
+      </div>
+      <div class="timeline-item">
+        <div class="year">2026</div>
+        <h3>v3.0 正式发布</h3>
+        <p>支持 50+ 种音乐风格，推出 API 服务和企业解决方案。用户突破 100 万，创作者社区作品超过 5 万件。</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="team">
+    <h2>核心团队</h2>
+    <div class="team-grid">
+      <div class="team-card">
+        <div class="team-avatar">🎵</div>
+        <h3>陈音</h3>
+        <div class="role">CEO & 联合创始人</div>
+        <div class="bio">前 Spotify 高级音乐产品经理，10 年音乐行业经验</div>
+      </div>
+      <div class="team-card">
+        <div class="team-avatar">🧠</div>
+        <h3>李智</h3>
+        <div class="role">CTO & 联合创始人</div>
+        <div class="bio">前 Google Brain 研究员，MIT 计算机科学博士</div>
+      </div>
+      <div class="team-card">
+        <div class="team-avatar">🎹</div>
+        <h3>王乐</h3>
+        <div class="role">首席音乐官</div>
+        <div class="bio">伯克利音乐学院毕业，格莱美提名制作人</div>
+      </div>
+      <div class="team-card">
+        <div class="team-avatar">⚙️</div>
+        <h3>张工</h3>
+        <div class="role">工程副总裁</div>
+        <div class="bio">前字节跳动技术总监，分布式系统专家</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="values">
+    <h2>我们的价值观</h2>
+    <div class="values-grid">
+      <div class="value-card">
+        <div class="icon">🎯</div>
+        <h3>创作者优先</h3>
+        <p>我们的每一个决策都以创作者的利益为出发点。AI 是工具，人才是核心。</p>
+      </div>
+      <div class="value-card">
+        <div class="icon">🔬</div>
+        <h3>技术驱动</h3>
+        <p>持续投入 AI 研究，追求音乐生成的质量、多样性和可控性的极致。</p>
+      </div>
+      <div class="value-card">
+        <div class="icon">🤝</div>
+        <h3>开放生态</h3>
+        <p>构建开放的创作者生态，让每个参与者都能从中获益。</p>
+      </div>
+      <div class="value-card">
+        <div class="icon">⚖️</div>
+        <h3>版权清晰</h3>
+        <p>确保所有生成内容的版权归属明确，让创作者商用无忧。</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="contact-cta">
+    <h2>加入我们</h2>
+    <p>我们正在寻找 passionate 的人才，一起用 AI 改变音乐创作的未来。</p>
+    <button class="btn" onclick="location.href='contact.html'">查看职位</button>
+  </div>
+</div>
+
+<footer style="padding:40px 48px;border-top:1px solid rgba(255,255,255,.04);text-align:center;margin-top:40px">
+  <p style="font-size:.8rem;color:var(--text3);margin-bottom:12px">
+    <a href="index.html" style="color:var(--text2);margin:0 12px">首页</a>
+    <a href="studio.html" style="color:var(--text2);margin:0 12px">创作工作室</a>
+    <a href="community.html" style="color:var(--text2);margin:0 12px">创作者社区</a>
+    <a href="api.html" style="color:var(--text2);margin:0 12px">API 文档</a>
+  </p>
+  <p style="font-size:.75rem;color:var(--text3)">© 2026 SonicForge Technologies</p>
+</footer>
+</body>
+</html>
