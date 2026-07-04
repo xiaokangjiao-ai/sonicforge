@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Noto+Sans+SC:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script src="supabase-client.js"></script>
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
@@ -257,6 +258,32 @@ a{color:inherit;text-decoration:none}
 </footer>
 
 <script>
+// ========== EmailJS 通知配置 ==========
+(function() {
+  emailjs.init("YeuvWDnHCl8MC24W");
+})();
+
+const EMAIL_CONFIG = {
+  serviceId: 'service_od1ca5q',
+  templateId: 'H0fd81fYwu8L0pcrfH2ID',
+  ownerEmail: 'xiaokanjiao@outlook.com'
+};
+
+function sendPaymentNotification(userEmail, plan, amount, method, txnId) {
+  const templateParams = {
+    user_email: userEmail,
+    plan: plan,
+    amount: amount,
+    method: method === 'paypal' ? 'PayPal' : method === 'alipay' ? '支付宝' : '微信支付',
+    transaction_id: txnId || 'N/A',
+    date: new Date().toLocaleString('zh-CN')
+  };
+
+  emailjs.send(EMAIL_CONFIG.serviceId, EMAIL_CONFIG.templateId, templateParams)
+    .then(() => console.log('通知邮件已发送'))
+    .catch((error) => console.error('发送通知失败:', error));
+}
+
 // ========== 收款配置 — 替换为你自己的收款信息 ==========
 const PAY_CONFIG = {
   // PayPal: 填入你的 paypal.me 链接
@@ -349,6 +376,9 @@ async function goPaypal() {
     });
   }
 
+  // Send notification email
+  sendPaymentNotification(email, p.name, getPrice(), 'paypal', 'paypal_' + Date.now());
+
   // Redirect to PayPal
   const paypalLink = PAY_CONFIG.paypal.link;
   if (paypalLink.includes('你的')) {
@@ -359,7 +389,10 @@ async function goPaypal() {
 
   // Show success after redirect
   setTimeout(() => {
-    document.getElementById('formContent').style.display = 'none';
+  // Send notification email
+  sendPaymentNotification(email, p.name, getPrice(), method, txnId);
+
+  document.getElementById('formContent').style.display = 'none';
     document.getElementById('successMsg').style.display = 'block';
   }, 1000);
 }
@@ -380,9 +413,75 @@ async function submitPayment(method) {
   // 注册真实用户到 Supabase
   const result = await Auth.signUp(email, pw, plan);
   if (!result.success) {
+    // 如果是已注册的用户，尝试直接登录
+    if (result.error && result.error.includes('already')) {
+      const loginResult = await Auth.signIn(email, pw);
+      if (loginResult.success) {
+        // 检查 profile 是否存在
+        let profile = await Auth.getProfile(loginResult.user.id);
+        if (!profile) {
+          // 自动创建 profile
+          const quotaMap = { free: 3, starter: 30, pro: 200 };
+          await db.from('profiles').insert({
+            id: loginResult.user.id,
+            email: email,
+            plan: plan,
+            quota_used: 0,
+            quota_limit: quotaMap[plan] || 30
+          });
+        }
+        
+        // 记录支付
+        await Payment.log(loginResult.user.id, {
+          plan: plan,
+          amount: getPrice(),
+          method: method,
+          transactionId: txnId,
+          status: 'pending'
+        });
+        
+        // 发送通知邮件
+        sendPaymentNotification(email, p.name, getPrice(), method, txnId);
+        
+        document.getElementById('formContent').style.display = 'none';
+        document.getElementById('successMsg').style.display = 'block';
+        return;
+      }
+    }
     alert('注册失败: ' + result.error);
     return;
   }
+
+  // 注册成功，确保 profile 已创建
+  if (result.user) {
+    let profile = await Auth.getProfile(result.user.id);
+    if (!profile) {
+      const quotaMap = { free: 3, starter: 30, pro: 200 };
+      await db.from('profiles').insert({
+        id: result.user.id,
+        email: email,
+        plan: plan,
+        quota_used: 0,
+        quota_limit: quotaMap[plan] || 30
+      });
+    }
+    
+    // 记录支付状态到数据库
+    await Payment.log(result.user.id, {
+      plan: plan,
+      amount: getPrice(),
+      method: method,
+      transactionId: txnId,
+      status: 'pending'
+    });
+  }
+
+  // Send notification email
+  sendPaymentNotification(email, p.name, getPrice(), method, txnId);
+
+  document.getElementById('formContent').style.display = 'none';
+  document.getElementById('successMsg').style.display = 'block';
+}
 
   // 记录支付状态到数据库
   if (result.user) {
@@ -414,8 +513,42 @@ async function submitFree() {
   // 注册真实用户到 Supabase
   const result = await Auth.signUp(email, pw, 'free');
   if (!result.success) {
+    // 如果是已注册的用户，尝试直接登录
+    if (result.error && result.error.includes('already')) {
+      const loginResult = await Auth.signIn(email, pw);
+      if (loginResult.success) {
+        // 检查并创建 profile
+        let profile = await Auth.getProfile(loginResult.user.id);
+        if (!profile) {
+          await db.from('profiles').insert({
+            id: loginResult.user.id,
+            email: email,
+            plan: 'free',
+            quota_used: 0,
+            quota_limit: 3
+          });
+        }
+        document.getElementById('formContent').style.display = 'none';
+        document.getElementById('successMsg').style.display = 'block';
+        return;
+      }
+    }
     alert('注册失败: ' + result.error);
     return;
+  }
+
+  // 确保 profile 已创建
+  if (result.user) {
+    let profile = await Auth.getProfile(result.user.id);
+    if (!profile) {
+      await db.from('profiles').insert({
+        id: result.user.id,
+        email: email,
+        plan: 'free',
+        quota_used: 0,
+        quota_limit: 3
+      });
+    }
   }
 
   // 保存登录状态

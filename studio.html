@@ -289,6 +289,24 @@ async function checkAuth() {
   if (user) {
     currentUser = user;
     userProfile = await Auth.getProfile(user.id);
+    
+    // 如果 profile 不存在，自动创建
+    if (!userProfile) {
+      const { data, error } = await db.from('profiles').insert({
+        id: user.id,
+        email: user.email,
+        plan: 'free',
+        quota_used: 0,
+        quota_limit: 3
+      }).select().single();
+      
+      if (error) {
+        console.error('创建 profile 失败:', error);
+      } else {
+        userProfile = data;
+      }
+    }
+    
     document.getElementById('userStatus').style.display = 'flex';
     document.getElementById('userEmail').textContent = user.email;
     document.getElementById('quotaBar').style.display = 'flex';
