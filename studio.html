@@ -138,6 +138,8 @@ input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;hei
 .login-box .switch-mode a{color:var(--cyan);cursor:pointer}
 .login-box .error-msg{color:var(--magenta);font-size:.8rem;margin-top:8px;display:none}
 .login-box .close-modal{position:absolute;top:16px;right:16px;background:none;border:none;color:var(--text3);font-size:1.2rem;cursor:pointer}
+.login-box a{color:var(--cyan);cursor:pointer;transition:opacity .2s}
+.login-box a:hover{opacity:.8}
 </style>
 </head>
 <body>
@@ -166,6 +168,9 @@ input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;hei
     </div>
     <div class="error-msg" id="loginError"></div>
     <button class="login-btn" id="loginBtn" onclick="doLogin()">登录</button>
+    <div class="switch-mode" style="margin-top:12px">
+      <a onclick="showResetPassword()" style="font-size:.85rem">忘记密码？</a>
+    </div>
     <div class="switch-mode">
       <span id="switchText">还没有账号？</span>
       <a onclick="toggleLoginMode()" id="switchLink">立即注册</a>
@@ -344,6 +349,32 @@ function toggleLoginMode() {
   document.getElementById('switchText').textContent = loginMode === 'login' ? '还没有账号？' : '已有账号？';
   document.getElementById('switchLink').textContent = loginMode === 'login' ? '立即注册' : '去登录';
   document.getElementById('loginError').style.display = 'none';
+}
+function showResetPassword() {
+  const email = document.getElementById('loginEmail').value.trim();
+  if (!email) {
+    showLoginError('请先输入邮箱地址');
+    return;
+  }
+  if (!confirm(`将发送重置密码链接到 ${email}，确定吗？`)) return;
+  
+  const btn = document.getElementById('loginBtn');
+  btn.disabled = true;
+  btn.textContent = '发送中...';
+  
+  supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.origin + '/studio.html'
+  }).then(({ error }) => {
+    if (error) {
+      showLoginError('发送失败：' + error.message);
+    } else {
+      document.getElementById('loginError').style.display = 'block';
+      document.getElementById('loginError').style.color = '#a8ff00';
+      document.getElementById('loginError').textContent = '重置链接已发送，请检查邮箱';
+    }
+    btn.disabled = false;
+    btn.textContent = '登录';
+  });
 }
 function showLoginError(msg) {
   const el = document.getElementById('loginError');
