@@ -363,14 +363,14 @@ function showResetPassword() {
   btn.textContent = '发送中...';
   
   supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: window.location.origin + '/studio.html'
+    redirectTo: window.location.origin + '/reset-password.html'
   }).then(({ error }) => {
     if (error) {
       showLoginError('发送失败：' + error.message);
     } else {
       document.getElementById('loginError').style.display = 'block';
       document.getElementById('loginError').style.color = '#a8ff00';
-      document.getElementById('loginError').textContent = '重置链接已发送，请检查邮箱';
+      document.getElementById('loginError').textContent = '重置链接已发送，请检查邮箱（注意查收垃圾邮件）';
     }
     btn.disabled = false;
     btn.textContent = '登录';

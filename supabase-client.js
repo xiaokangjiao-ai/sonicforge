@@ -127,6 +127,17 @@ const Quota = {
         profile.quota_used = 0;
       }
       
+      // 如果是新的一个月，重置付费用户额度
+      const currentMonth = new Date().getMonth();
+      const resetMonth = profile.last_quota_reset ? new Date(profile.last_quota_reset).getMonth() : null;
+      if (resetMonth !== currentMonth && profile.plan !== 'free') {
+        await Auth.updateProfile(userId, {
+          quota_used: 0,
+          last_quota_reset: new Date().toISOString()
+        });
+        profile.quota_used = 0;
+      }
+      
       const remaining = profile.quota_limit - profile.quota_used;
       return {
         hasQuota: remaining > 0,

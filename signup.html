@@ -389,10 +389,7 @@ async function goPaypal() {
 
   // Show success after redirect
   setTimeout(() => {
-  // Send notification email
-  sendPaymentNotification(email, p.name, getPrice(), method, txnId);
-
-  document.getElementById('formContent').style.display = 'none';
+    document.getElementById('formContent').style.display = 'none';
     document.getElementById('successMsg').style.display = 'block';
   }, 1000);
 }
