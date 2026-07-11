@@ -480,21 +480,6 @@ async function submitPayment(method) {
   document.getElementById('successMsg').style.display = 'block';
 }
 
-  // 记录支付状态到数据库
-  if (result.user) {
-    await Payment.log(result.user.id, {
-      plan: plan,
-      amount: getPrice(),
-      method: method,
-      transactionId: txnId,
-      status: 'pending'
-    });
-  }
-
-  document.getElementById('formContent').style.display = 'none';
-  document.getElementById('successMsg').style.display = 'block';
-}
-
 // ========== Free Plan ==========
 async function submitFree() {
   const email = document.getElementById('email').value.trim();
