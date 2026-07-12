@@ -362,16 +362,32 @@ function showResetPassword() {
   btn.disabled = true;
   btn.textContent = '发送中...';
   
-  supabase.auth.resetPasswordForEmail(email, {
+  // 设置超时处理
+  const timeout = setTimeout(() => {
+    showLoginError('发送超时，请检查网络连接后重试');
+    btn.disabled = false;
+    btn.textContent = '登录';
+  }, 10000); // 10秒超时
+  
+  // 使用 db 客户端
+  db.auth.resetPasswordForEmail(email, {
     redirectTo: window.location.origin + '/reset-password.html'
   }).then(({ error }) => {
+    clearTimeout(timeout);
     if (error) {
+      console.error('重置密码错误:', error);
       showLoginError('发送失败：' + error.message);
     } else {
       document.getElementById('loginError').style.display = 'block';
       document.getElementById('loginError').style.color = '#a8ff00';
       document.getElementById('loginError').textContent = '重置链接已发送，请检查邮箱（注意查收垃圾邮件）';
     }
+    btn.disabled = false;
+    btn.textContent = '登录';
+  }).catch((err) => {
+    clearTimeout(timeout);
+    console.error('重置密码错误:', err);
+    showLoginError('发送失败：' + (err.message || '网络错误'));
     btn.disabled = false;
     btn.textContent = '登录';
   });
