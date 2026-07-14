@@ -275,6 +275,50 @@ input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;hei
 </div>
 
 <script>
+// ========== 调试工具 ==========
+// 在浏览器控制台输入 debugAuth() 查看认证状态
+window.debugAuth = async function() {
+  console.log('=== 认证调试信息 ===');
+  const { data: { user } } = await db.auth.getUser();
+  console.log('当前用户:', user);
+  console.log('用户 ID:', user?.id);
+  console.log('用户邮箱:', user?.email);
+  
+  if (user) {
+    console.log('\n=== 查询 Profile ===');
+    const { data, error } = await db
+      .from('profiles')
+      .select('*')
+      .eq('id', user.id)
+      .single();
+    
+    if (error) {
+      console.error('查询失败:', error);
+      console.log('\n=== 尝试创建 Profile ===');
+      const { data: newData, error: newError } = await db
+        .from('profiles')
+        .insert({
+          id: user.id,
+          email: user.email,
+          plan: 'free',
+          quota_used: 0,
+          quota_limit: 3
+        })
+        .select()
+        .single();
+      
+      if (newError) {
+        console.error('创建失败:', newError);
+      } else {
+        console.log('创建成功:', newData);
+      }
+    } else {
+      console.log('Profile 存在:', data);
+    }
+  }
+  console.log('=== 调试完成 ===');
+};
+
 // ========== STATE ==========
 let selectedGenre = 'electronic';
 let audioCtx = null;

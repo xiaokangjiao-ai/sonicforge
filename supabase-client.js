@@ -76,13 +76,25 @@ const Auth = {
   // 获取用户 Profile
   async getProfile(userId) {
     try {
+      console.log('查询用户 Profile, userId:', userId);
+      
+      // 先检查登录状态
+      const { data: { user: currentUser } } = await db.auth.getUser();
+      console.log('当前登录用户:', currentUser?.id);
+      
       const { data, error } = await db
         .from('profiles')
         .select('*')
         .eq('id', userId)
         .single();
       
-      if (error) throw error;
+      if (error) {
+        console.error('查询 Profile 失败:', error);
+        console.error('错误详情:', error.message, error.code);
+        throw error;
+      }
+      
+      console.log('查询成功, profile:', data);
       return data;
     } catch (error) {
       console.error('获取 Profile 失败:', error);
